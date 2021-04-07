@@ -6,19 +6,19 @@
 ## Started 2021 April 05.
 ## See Github Repo https://github.com/don-radcliffe/nps_fx.
 
-library(here)
-library(dplyr)
-library(stringr)
-library(tidyr)
-library(reshape2)
+require(here)
+require(dplyr)
+require(stringr)
+require(tidyr)
+require(reshape2)
 
-## The here() function for automatically finding the working directory is only working sporadically working for me.
+## The here() function has been buggy for me
 ## try the command below if you're working on a different machine
-here('data')
+#here('data')
 
 ## The 'Sorry Jenny Bryan' Option
-#setwd('C:/ProgramR/nps_fx/data')
-#trees_raw <- read.csv('data_raw/trees_raw.csv')
+setwd('C:/ProgramR/nps_fx/data')
+trees_raw <- read.csv('data_raw/trees_raw.csv')
 
 ##### Preprocessing ######
 
@@ -187,7 +187,26 @@ plot_visit_data <- trees %>%
 
 ## This section is for creating plot-visit level stand structure metrics.
 
-## Basal area per plot-visit.
+## Basal area per plot-visit, blind to species, divided by live-dead status
+basal_area <- trees %>%
+  ## Select relevant columns.
+  select(c(plot_visit, dbh, status)) %>%
+  ## Make a column for basal area (m²/ha) per individual tree.
+  ## Plots are 20x50m, 1000m², 1/10 ha. 
+  ## And dbh is in cm.
+  ## So the formula is pi*radius²[(((dbh/2)^2)*pi], convert cm² to meters² [*0.0001], then scale to hectares [*10].
+  mutate(basal_area = (((dbh/2)^2)*pi*0.0001*10)) %>%
+  ## Summarize basal area by plot_visit + species + status.
+  dcast(plot_visit + status ~ ., value.var = 'basal_area', sum) %>%
+  rename('basal_area' = '.') %>%
+  ## Make sure any zero values are captured.
+  pivot_wider(names_from = status, values_from = basal_area) %>%
+  pivot_longer(c(l:d), names_to = 'status', values_to = 'basal_area') %>%
+  ## Make zeros from the NAs that result from the pivoting.
+  replace(is.na(.), 0)
+head(basal_area)
+
+## Basal area per plot-visit, by species and live-dead status.
 basal_area_species <- trees %>%
   ## Select relevant columns.
   select(c(plot_visit, species, dbh, status)) %>%
@@ -203,4 +222,4 @@ basal_area_species <- trees %>%
   pivot_wider(names_from = species, values_from = basal_area) %>%
   pivot_longer(c(pipo:abgr), names_to = 'species', values_to = 'basal_area') %>%
   ## Make zeros from the NAs that result.
-  replace(is.na(basal_area), 0)
+  replace(is.na(.), 0)
