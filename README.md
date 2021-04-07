@@ -4,7 +4,7 @@ Manuscript development is in progress, please contact us before using any script
 
 The goal of this project is to assess the rate of fuel accumulation after different combinations of forest fuels reduction treatments such as thinning and burning.  Single entry vs. multiple entry treatment is of particular interest.  The NPS Fire Effects monitoring program in Washington began in 1996, and has been monitoring an increasing number of thinning, broadcast burning, and pile burning projects since. Plots are sampled before treatment and 1, 2, 3, 5, 10, and 15 years after the last treatment, and that timeline starts over each time a new treatment is implemented on a plot.  In total there are more than 600 plot reads at more than 150 plots, with varying combinations of treatment histories including many with multiple thinning and/or burning entries. Response variables collected include surface fuels, canopy trees, shrubs, understory plants, and tree regeneration.  Our project focuses mainly on surface fuel, shrub, and tree information.  
 
-Data collection follows FFI (FEAT/FIREMON Integrated) protocols; see the 'protocols' folder for more information.  Data were downloaded from the NPS Data Store: https://irma.nps.gov/DataStore/Reference/Profile/2271695. 
+Data collection follows FFI (FEAT/FIREMON Integrated) protocols; see the 'protocols' folder for more information.  Data in the 'data_raw' folder were downloaded from the NPS Data Store, and have not been altered in any way from that download. https://irma.nps.gov/DataStore/Reference/Profile/2271695. 
 
 The analysis is partially funded by a Washington Legislative grant for studying fuels treatment longevity, which was led by Derek Churchill at the Washington Department of Natural Resources (WDNR).  
 
