@@ -6,19 +6,19 @@
 ## Started 2021 April 05.
 ## See Github Repo https://github.com/don-radcliffe/nps_fx.
 
-library(here)
-library(dplyr)
-library(stringr)
-library(tidyr)
-library(reshape2)
+require(here)
+require(dplyr)
+require(stringr)
+require(tidyr)
+require(reshape2)
 
-## The here() function for automatically finding the working directory is only working sporadically working for me.
+## The here() function has been buggy for me
 ## try the command below if you're working on a different machine
-here('data')
+#here('data')
 
 ## The 'Sorry Jenny Bryan' Option
-#setwd('C:/ProgramR/nps_fx/data')
-#trees_raw <- read.csv('data_raw/trees_raw.csv')
+setwd('C:/ProgramR/nps_fx/data')
+trees_raw <- read.csv('data_raw/trees_raw.csv')
 
 ##### Preprocessing ######
 
