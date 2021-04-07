@@ -6,14 +6,19 @@
 ## Started 2021 April 05.
 ## See Github Repo https://github.com/don-radcliffe/nps_fx.
 
+library(here)
 library(dplyr)
 library(stringr)
 library(tidyr)
 library(reshape2)
-library(here)
 
+## The here() function for automatically finding the working directory is only working sporadically working for me.
+## try the command below if you're working on a different machine
 here('data')
-trees_raw <- read.csv('data_raw/trees_raw.csv')
+
+## The 'Sorry Jenny Bryan' Option
+#setwd('C:/ProgramR/nps_fx/data')
+#trees_raw <- read.csv('data_raw/trees_raw.csv')
 
 ##### Preprocessing ######
 
@@ -183,7 +188,7 @@ plot_visit_data <- trees %>%
 ## This section is for creating plot-visit level stand structure metrics.
 
 ## Basal area per plot-visit.
-basal_area <- trees %>%
+basal_area_species <- trees %>%
   ## Select relevant columns.
   select(c(plot_visit, species, dbh, status)) %>%
   ## Make a column for basal area (m²/ha) per individual tree.
@@ -199,4 +204,3 @@ basal_area <- trees %>%
   pivot_longer(c(pipo:abgr), names_to = 'species', values_to = 'basal_area') %>%
   ## Make zeros from the NAs that result.
   replace(is.na(basal_area), 0)
-head(basal_area)  
