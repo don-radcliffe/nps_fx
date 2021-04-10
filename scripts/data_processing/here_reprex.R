@@ -12,7 +12,7 @@
 
 library(here)
 # here() starts at C:/ProgramR/nps_fx
-here('data')
+trees <- read.csv(here('data/data_raw/trees_raw.csv'))
 # [1] "C:/ProgramR/nps_fx/data"
 trees <- read.csv('data_raw/trees_raw.csv')
 # Error in file(file, "rt") : cannot open the connection
