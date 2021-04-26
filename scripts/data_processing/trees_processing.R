@@ -12,13 +12,13 @@ require(stringr)
 require(tidyr)
 require(reshape2)
 
-## The here() function has been buggy for me
-## try the command below if you're working on a different machine
-#here('data')
+conflict_prefer('select', 'dplyr')
+conflict_prefer('filter', 'dplyr')
 
-## The 'Sorry Jenny Bryan' Option
-setwd('C:/ProgramR/nps_fx/data')
-trees_raw <- read.csv('data_raw/trees_raw.csv')
+import_dir_nps <- here::here('data')
+export_dir_nps <- here::here('data', 'data_tidy')
+
+trees_raw <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw.csv'), stringsAsFactors = TRUE)
 
 ##### Preprocessing ######
 
@@ -187,24 +187,7 @@ plot_visit_data <- trees %>%
 
 ## This section is for creating plot-visit level stand structure metrics.
 
-## Basal area per plot-visit, blind to species, divided by live-dead status
-basal_area <- trees %>%
-  ## Select relevant columns.
-  select(c(plot_visit, dbh, status)) %>%
-  ## Make a column for basal area (m²/ha) per individual tree.
-  ## Plots are 20x50m, 1000m², 1/10 ha. 
-  ## And dbh is in cm.
-  ## So the formula is pi*radius²[(((dbh/2)^2)*pi], convert cm² to meters² [*0.0001], then scale to hectares [*10].
-  mutate(basal_area = (((dbh/2)^2)*pi*0.0001*10)) %>%
-  ## Summarize basal area by plot_visit + species + status.
-  dcast(plot_visit + status ~ ., value.var = 'basal_area', sum) %>%
-  rename('basal_area' = '.') %>%
-  ## Make sure any zero values are captured.
-  pivot_wider(names_from = status, values_from = basal_area) %>%
-  pivot_longer(c(l:d), names_to = 'status', values_to = 'basal_area') %>%
-  ## Make zeros from the NAs that result from the pivoting.
-  replace(is.na(.), 0)
-head(basal_area)
+##### Basal Area #####
 
 ## Basal area per plot-visit, by species and live-dead status.
 basal_area_species <- trees %>%
@@ -223,3 +206,13 @@ basal_area_species <- trees %>%
   pivot_longer(c(pipo:abgr), names_to = 'species', values_to = 'basal_area') %>%
   ## Make zeros from the NAs that result.
   replace(is.na(.), 0)
+
+## Add them up to get a species blind dataframe
+basal_area <- basal_area_species %>%
+  aggregate(basal_area ~ plot_visit + status, data = ., FUN = sum) %>%
+  mutate(basal_area = round(basal_area, digits = 1))
+
+
+###### Density #######
+density <- trees %>%
+  select(c(plot_visit, species, status))
