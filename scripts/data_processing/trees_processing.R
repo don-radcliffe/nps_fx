@@ -6,6 +6,9 @@
 ## Started 2021 April 05.
 ## See Github Repo https://github.com/don-radcliffe/nps_fx.
 
+## Questions: heights of NA and zero?  Mostly dead trees?
+## Dbh of NA and zero?
+
 require(here)
 require(dplyr)
 require(stringr)
@@ -214,5 +217,51 @@ basal_area <- basal_area_species %>%
 
 
 ###### Density #######
-density <- trees %>%
-  select(c(plot_visit, species, status))
+density_spp <- trees %>%
+  select(c(plot_visit, species, status)) %>%
+  ## Add a column of tens to make for easy density calculation,
+  ## each plot is 1/10 of a hectare so each tree sampled represents 10 trees per hectare.
+  mutate(density = 10) %>%
+  ## Aggregate that column.
+  aggregate(density ~ plot_visit + species + status, data = ., FUN = sum) %>%
+  ## Spread and gather to fill out species for each plot.
+  pivot_wider(id_cols = c(plot_visit, status), names_from = species, values_from = density) %>%
+  pivot_longer(cols = abam:samy, names_to = 'species', values_to = 'density') %>%
+  mutate(density = replace_na(density, 0)) %>%
+  arrange(plot_visit, species, status)
+
+density <- density_spp %>%
+  ## Just add up the density values for each species within a plot visit.
+  aggregate(density ~ plot_visit + status, data = ., FUN = sum)
+
+
+###### QMD ######
+qmd_spp <- trees %>%
+  select(c(plot_visit, species, status, dbh)) %>%
+  ## Square dbh for the first part of the calculation.
+  mutate(dbh2 = dbh*dbh) %>% 
+  ## Average.
+  aggregate(dbh2 ~ plot_visit + species + status, data = ., FUN = mean) %>%
+  ## Finish the qmd calc with square root.
+  mutate(qmd = round(sqrt(dbh2), digits = 1)) %>%
+  ## Spread and gather for zeros where a species is not in a plot.
+  pivot_wider(id_cols = c(plot_visit, status), names_from = species, values_from = qmd) %>%
+  ## Only one ABAM on record and it had a dbh of NA, so it shows up in density but not here or basal area.
+  pivot_longer(cols = abgr:samy, names_to = 'species', values_to = 'qmd') %>%
+  mutate(qmd = replace_na(qmd, 0)) %>%
+  arrange(plot_visit, species, status)
+
+## Need to to it all over again for qmd no species
+qmd <- trees %>%
+  select(c(plot_visit, status, dbh)) %>%
+  ## Square dbh for the first part of the calculation.
+  mutate(dbh2 = dbh*dbh) %>% 
+  ## Average over plot visit and status.
+  aggregate(dbh2 ~ plot_visit + status, data = ., FUN = mean) %>%
+  ## Square root
+  mutate(qmd = round(sqrt(dbh2), digits = 1)) %>%
+  select(plot_visit, status, qmd)
+head(qmd)
+
+
+###### Tidy Tree Dataframes ######
