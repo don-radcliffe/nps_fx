@@ -193,7 +193,7 @@ plot_visit_data <- trees %>%
 ##### Basal Area #####
 
 ## Basal area per plot-visit, by species and live-dead status.
-basal_area_species <- trees %>%
+basal_area_spp <- trees %>%
   ## Select relevant columns.
   select(c(plot_visit, species, dbh, status)) %>%
   ## Make a column for basal area (m²/ha) per individual tree.
@@ -208,7 +208,8 @@ basal_area_species <- trees %>%
   pivot_wider(names_from = species, values_from = basal_area) %>%
   pivot_longer(c(pipo:abgr), names_to = 'species', values_to = 'basal_area') %>%
   ## Make zeros from the NAs that result.
-  replace(is.na(.), 0)
+  replace(is.na(.), 0) %>%
+  mutate(basal_area = round(basal_area, digits = 1))
 
 ## Add them up to get a species blind dataframe
 basal_area <- basal_area_species %>%
@@ -236,6 +237,9 @@ density <- density_spp %>%
 
 
 ###### QMD ######
+
+## Not sure how to handle the zeros in dbh. 
+
 qmd_spp <- trees %>%
   select(c(plot_visit, species, status, dbh)) %>%
   ## Square dbh for the first part of the calculation.
@@ -265,3 +269,16 @@ head(qmd)
 
 
 ###### Tidy Tree Dataframes ######
+
+tidy_tree_spp <- basal_area_spp %>%
+  full_join(density_spp, by = c('plot_visit', 'status', 'species')) %>%
+  full_join(qmd_spp, by = c('plot_visit', 'status', 'species')) %>%
+  arrange(plot_visit, status, species) %>%
+  replace(is.na(.), 0)
+
+tidy_tree <- basal_area %>%
+  full_join(density, by = c('plot_visit', 'status')) %>%
+  full_join(qmd, by = c('plot_visit', 'status')) %>%
+  arrange(plot_visit, status) %>%
+  replace(is.na(.), 0)
+View(tidy_tree)
