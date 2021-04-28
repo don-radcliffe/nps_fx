@@ -274,11 +274,11 @@ tidy_tree_spp <- basal_area_spp %>%
   full_join(qmd_spp, by = c('plot_visit', 'status', 'species')) %>%
   arrange(plot_visit, status, species) %>%
   replace(is.na(.), 0)
-#write.csv(tidy_tree_spp, file.path(export_dir_nps, 'tidy_tree_spp.csv'), row.names = FALSE)
+#write.csv(tidy_tree_spp, file.path(export_dir_nps, 'trees_spp_tidy.csv'), row.names = FALSE)
 
 tidy_tree <- basal_area %>%
   full_join(density, by = c('plot_visit', 'status')) %>%
   full_join(qmd, by = c('plot_visit', 'status')) %>%
   arrange(plot_visit, status) %>%
   replace(is.na(.), 0)
-#write.csv(tidy_tree, file.path(export_dir_nps, 'tidy_tree.csv'), row.names = FALSE)
+#write.csv(tidy_tree, file.path(export_dir_nps, 'trees_tidy.csv'), row.names = FALSE)
