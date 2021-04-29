@@ -35,7 +35,7 @@ trees1 <- trees_raw %>%
   mutate(plot_utm_zone = tolower(MacroPlot.UTM.Zone)) %>% 
   mutate(plot_utm_y = tolower(MacroPlot.UTM.Y)) %>%
   mutate(plot_utm_x = tolower(MacroPlot.UTM.X)) %>%
-  mutate(plot_purpose = tolower(MacroPlot.Purpose)) %>%
+  mutate(area = tolower(MacroPlot.Purpose)) %>%
   mutate(species = tolower(Species.Symbol)) %>%
   mutate(quarter = tolower(QTR)) %>%
   mutate(tag = tolower(TagNo)) %>%
@@ -140,6 +140,9 @@ trees1 <- trees_raw %>%
                                                   'thin' = '0',
                                                   'pretreatment_early' = '0',
                                                   'pretreatment_current' = '0'))) %>%
+  ## There are some spaces in the area column that create duplicate factors.
+  mutate(area = str_replace_all(area, 
+         c('boulder ' = 'boulder', 'mcgregor ' = 'mcgregor', 'weaver ' = 'weaver'))) %>%
   ## Now lets fix that date column.
   ## First split the date from the time; the NA argument gets rid of the time, which isn't useful.
   separate(date, c('date', NA), sep = ' ') %>%
@@ -183,7 +186,7 @@ hist(trees$number_of_na)
 ## i.e. so that we can use it like a relational database.
 plot_data <- trees %>%
   ## Select relevent columns.
-  select(c('plot', 'plot_utm_zone', 'plot_utm_x', 'plot_utm_y', 'plot_purpose')) %>%
+  select(c('plot', 'plot_utm_zone', 'plot_utm_x', 'plot_utm_y', 'area')) %>%
   ## Rid duplicate rows and sort.
   unique() %>%
   arrange(plot)
@@ -195,7 +198,7 @@ plot_data <- trees %>%
 plot_visit_data <- trees %>%
   ## Select relavant columns.
   ## Purposefully leaving out 'monitoring_status,' redundant. 
-  select(c('plot_visit', 'plot', 'year', 'date', 
+  select(c('plot_visit', 'plot', 'area', 'year', 'date', 
            'treatment_code', 'years_post', 'treatment', 
            'burns', 'thins', 'pileburns')) %>%
   ## Rid duplicate rows and sort.
