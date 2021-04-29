@@ -26,7 +26,7 @@ trees_raw <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw.csv'), strin
 ##### Preprocessing ######
 
 ## This first long chain of pipes makes the data more R and Don friendly.
-trees <- trees_raw %>%
+trees1 <- trees_raw %>%
   ## Use mutate to rename columns to get rid of spaces and uppercase in column names,
   ## with tolower() to get rid of uppercase in values.
   mutate(date = tolower(Date)) %>%
@@ -155,7 +155,26 @@ trees <- trees_raw %>%
   mutate(plot_visit = as.factor(plot_visit)) %>%
   mutate(species = as.factor(species)) %>%
   mutate(dbh = as.numeric(dbh)) %>%
+  ## order live and dead.
   mutate(status = factor(status, levels = c('l','d')))
+
+## Some plot-visits have a lot of NAs in the dbh column, 
+## mostly concentrated around the immediate post-treatment read but not always.
+## They create a lot of false zeros in the stand structural dataframe,
+## so I'm getting rid of them here. 
+dbh_na <- trees1 %>% 
+  group_by(plot_visit) %>% 
+  summarize(number_of_na = sum(is.na(dbh))) %>%
+#hist(dbh_na$number_of_na, breaks = 70).
+## The histogram suggests there's a break in NAs after 4 (per plot).
+## We can adjust this after talking with Karen.
+ filter(number_of_na <5)
+
+## The right join filters out plot visits with a lot of nas in dbh.
+trees <- trees1 %>%
+   right_join(dbh_na, by = 'plot_visit')
+## And check it worked:
+hist(trees$number_of_na)
 
 ##### Plot and Plot-Visit Dataframes ######
 
@@ -212,7 +231,7 @@ basal_area_spp <- trees %>%
   mutate(basal_area = round(basal_area, digits = 1))
 
 ## Add them up to get a species blind dataframe
-basal_area <- basal_area_species %>%
+basal_area <- basal_area_spp %>%
   aggregate(basal_area ~ plot_visit + status, data = ., FUN = sum) %>%
   mutate(basal_area = round(basal_area, digits = 1))
 
@@ -227,7 +246,7 @@ density_spp <- trees %>%
   aggregate(density ~ plot_visit + species + status, data = ., FUN = sum) %>%
   ## Spread and gather to fill out species for each plot.
   pivot_wider(id_cols = c(plot_visit, status), names_from = species, values_from = density) %>%
-  pivot_longer(cols = abam:samy, names_to = 'species', values_to = 'density') %>%
+  pivot_longer(cols = abgr:samy, names_to = 'species', values_to = 'density') %>%
   mutate(density = replace_na(density, 0)) %>%
   arrange(plot_visit, species, status)
 

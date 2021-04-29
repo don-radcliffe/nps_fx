@@ -13,6 +13,7 @@ export_dir_tg <- here::here('plots', 'trees')
 trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'), stringsAsFactors = TRUE)
 plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
 
+## Theme for graphing
 simpletheme <- theme(panel.grid.major = element_blank(), 
                      panel.grid.minor = element_blank(),
                      panel.background = element_blank()) +
@@ -21,12 +22,13 @@ simpletheme <- theme(panel.grid.major = element_blank(),
 trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
   ## -2 means early pretreatment read, only want to use most recent pretreatment read
   filter(years_post != -2) %>%
+  ## There are some weird zeros in the data that 
   filter(status == 'l')
 head(trees)
 
-basal_area <- ggplot(trees, aes(x = years_post, y = basal_area)) +
+basal_area <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot)) +
   geom_point(alpha = 0.3, size = 1.8) +
-  geom_smooth(method = 'lm', se = FALSE, color = 'black') +
+  geom_line() +
   facet_grid(thins~burns, labeller = label_both) +
   ## Note my x scale cut off ten data points at the 20 years mark,
   ## mostly one thin one burn,
@@ -39,9 +41,9 @@ basal_area <- ggplot(trees, aes(x = years_post, y = basal_area)) +
   ylab('basal area (meters squared per hectare)')
 basal_area
 
-density <- ggplot(trees, aes(x = years_post, y = density)) +
+density <- ggplot(trees, aes(x = years_post, y = density, group = plot)) +
   geom_point(alpha = 0.3, size = 1.8) +
-  geom_smooth(method = 'lm', se = FALSE, color = 'black') +
+  geom_line() +
   facet_grid(thins~burns, labeller = label_both) +
   ## Note my x scale cut off ten data points at the 20 years mark,
   ## mostly one thin one burn,
@@ -54,9 +56,9 @@ density <- ggplot(trees, aes(x = years_post, y = density)) +
   ylab('density (trees per hectare)')
 density
 
-qmd <- ggplot(trees, aes(x = years_post, y = qmd)) +
+qmd <- ggplot(trees, aes(x = years_post, y = qmd, group = plot)) +
   geom_point(alpha = 0.3, size = 1.8) +
-  geom_smooth(method = 'lm', se = FALSE, color = 'black') +
+  geom_line() +
   facet_grid(thins~burns, labeller = label_both) +
   ## Note my x scale cut off ten data points at the 20 years mark,
   ## mostly one thin one burn,
@@ -70,6 +72,11 @@ qmd <- ggplot(trees, aes(x = years_post, y = qmd)) +
   ylab('quadratic mean diameter (centimeters)')
 qmd
 
-basal_area_one <- ggplot(trees, aes(x = years_post, y = density, fill = as.factor(thins), lty = as.factor(burns))) +
-  geom_smooth(method = 'lm', se = FALSE, color = 'black')
+## Let's try a more longitutinal graph. 
+basal_area_one <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot, 
+                                    color = as.factor(treatment))) +
+  geom_line() + 
+  simpletheme
 basal_area_one  
+
+
