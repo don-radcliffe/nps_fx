@@ -1,18 +1,40 @@
-## This script is for graphing stand structure variables, in order to get a better sense of the study site.
-## Don Radcliffe, dradclif@uw.edu,
-## Started 27 April 2021.
+---
+title: "trees_graphs_markdown"
+author: "Don Radcliffe"
+date: "4/27/2021"
+output: html_document
+---
 
+# Introduction
+
+This script is for graphing the stand structure variables basal area, density, and qmd, in order to get a better sense of the study site for brainstorming analyses.  I haven't processed any other response variables yet but figured that these three would be best for a first pass on thinking about how to process and visualize the rest of the data.  
+
+This sort of graphing exercise is about as far as we're planning to go for the DNR report; we're planning on doing pretty regressions of important response variables with time since treatment, combining data from multiple relavant studies.  Those graphs will probably broken up by treatment type as I've done with the first set of graphs here.  
+
+Let me know if you have any feedback on how to better visualize these data, I consider these graphs exploratory in that I tried to squeeze in more information than we'd put in a final product.  And there may well be better ways to go about this.  
+
+Note that several plots had the majority of their trees' dbh values listed as NA, especially in the immediate post-treatment reads but not limited to those.  Whether or not the dbh was listed as NA did not seem related to other values like height.  I've filtered out any plots with more than four NAs in the dbh column, in my data_processing script.  I'm not sure if this approach makes sense, but I can easily adjust that after talking to Karen about the meaning of those NAs.
+
+# Setup and formatting code:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, read data, message = FALSE}
 require(here)
 require(dplyr)
 require(ggplot2)
-require(ggthemes)
 
 import_dir_tg <- here::here('data', 'data_tidy')
 export_dir_tg <- here::here('plots', 'trees')
 
 trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'), stringsAsFactors = TRUE)
 plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
+```
 
+
+```{r graphing themes}
 ## Theme for graphing.
 simpletheme <- theme(panel.grid.major = element_blank(), 
                      panel.grid.minor = element_blank(),
@@ -28,10 +50,12 @@ area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'g
 
 ## And for treatments.
 treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
-                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'tan4',
-                      'thin_burn' = 'gold1', 'thin_burn_burn' = 'gold3',
+                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'gold1',
+                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
                       'thin_thin_burn' = 'gray40', 'thin_thin_burn_burn' = 'gray20', 'thin_thin_burn_burn_burn' = 'gray0')
+```
 
+```{r setup dataframes}
 trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
   ## -2 means early pretreatment read, only want to use most recent pretreatment read
   filter(years_post != -2) %>%
@@ -46,7 +70,15 @@ trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
   ## don't see Bullion on my map, maybe it replaced a problematic older name that's farthest away.
   mutate(area = factor(area, levels = c('weaver', 'boulder', 'orchard rainbow', 'company creek',
                                         'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion')))
+```
 
+# Graphing code:  
+
+## Faceted graphs:  
+
+For this first set of graphs, I've faceted out the different combinations of thinning and burning to visualize how important variables
+
+```{r basal area faceted graph}
 basal_area <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot)) +
   geom_point(alpha = 0.5, size = 1.4) +
   geom_line(size = 1.1, aes(color = area)) +
@@ -62,7 +94,9 @@ basal_area <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot)) +
   xlab('years after treatment combination') +
   ylab('basal area (meters squared per hectare)')
 basal_area
+```
 
+```{r density facted graph}
 density <- ggplot(trees, aes(x = years_post, y = density, group = plot)) +
   geom_point(alpha = 0.3, size = 1.8) +
   geom_line(size = 1.1, aes(color = area)) +
@@ -78,7 +112,9 @@ density <- ggplot(trees, aes(x = years_post, y = density, group = plot)) +
   xlab('years after treatment combination') +
   ylab('density (trees per hectare)')
 density
+```
 
+```{r qmd faceted graph}
 qmd <- ggplot(trees, aes(x = years_post, y = qmd, group = plot)) +
   geom_point(alpha = 0.3, size = 1.8) +
   geom_line(size = 1.1, aes(color = area)) +
@@ -95,8 +131,10 @@ qmd <- ggplot(trees, aes(x = years_post, y = qmd, group = plot)) +
   xlab('years after treatment combination') +
   ylab('quadratic mean diameter (centimeters)')
 qmd
+```
 
-## Let's try a more longitutinal graph. 
+
+```{r basal area longitudinal graph} 
 basal_area_one <- ggplot(trees, aes(x = year, y = basal_area, group = plot, color = treatment)) +
   geom_line(size = 1.1, aes(color = treatment)) + 
   scale_color_manual(values = treatment_colors) +
@@ -104,7 +142,9 @@ basal_area_one <- ggplot(trees, aes(x = year, y = basal_area, group = plot, colo
   ggtitle('Longitudinal basal area changes, Lake Roosevelt') +
   ylab('basal area (meters squared per hectare)')
 basal_area_one  
+```
 
+```{r density longitudinal graph}
 density_one <- ggplot(trees, aes(x = year, y = density, group = plot, color = treatment)) +
   geom_line(size = 1.1, aes(color = treatment)) + 
   scale_color_manual(values = treatment_colors) +
@@ -112,7 +152,9 @@ density_one <- ggplot(trees, aes(x = year, y = density, group = plot, color = tr
   ggtitle('Longitudinal density changes, Lake Roosevelt') +
   ylab('density (trees per hectare)')
 density_one
+```
 
+```{r qmd longitudinal graph}
 qmd_one <- ggplot(trees, aes(x = year, y = qmd, group = plot, color = treatment)) +
   geom_line(size = 1.1, aes(color = treatment)) + 
   scale_color_manual(values = treatment_colors) +
@@ -120,3 +162,4 @@ qmd_one <- ggplot(trees, aes(x = year, y = qmd, group = plot, color = treatment)
   ggtitle('Longitudinal qmd changes, Lake Roosevelt') +
   ylab('quadratic mean diameter (centimeters)')
 qmd_one
+```
