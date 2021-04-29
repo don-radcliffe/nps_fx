@@ -28,8 +28,8 @@ area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'g
 
 ## And for treatments.
 treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
-                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'tan4',
-                      'thin_burn' = 'gold1', 'thin_burn_burn' = 'gold3',
+                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'gold1',
+                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
                       'thin_thin_burn' = 'gray40', 'thin_thin_burn_burn' = 'gray20', 'thin_thin_burn_burn_burn' = 'gray0')
 
 trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
