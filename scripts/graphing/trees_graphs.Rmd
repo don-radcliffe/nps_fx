@@ -40,7 +40,7 @@ import_dir_tg <- here::here('data', 'data_tidy')
 export_dir_tg <- here::here('plots', 'trees')
 
 trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'), stringsAsFactors = TRUE)
-plot_data_raw <- read.csv(file.path(export_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
+plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
 ```
 
 
