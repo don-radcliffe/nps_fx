@@ -200,13 +200,12 @@ plot_visit_data <- trees %>%
   ## Purposefully leaving out 'monitoring_status,' redundant. 
   select(c('plot_visit', 'plot', 'area', 'year', 'date', 
            'treatment_code', 'years_post', 'treatment', 
-           'burns', 'thins', 'pileburns')) %>%
+           'burns', 'thins', 'pileburns', 'monitoring_status')) %>%
   ## Rid duplicate rows and sort.
   unique() %>%
   arrange(plot_visit)
 ## Save to 'data_tidy' folder if desired
 #write.csv(plot_visit_data, file.path(export_dir_nps, 'plot_visit_data.csv'), row.names = FALSE)
-
 
 ##### Stand Structure #####
 
