@@ -44,26 +44,6 @@ plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), strin
 ```
 
 
-```{r graphing themes}
-## Theme for graphing.
-simpletheme <- theme(panel.grid.major = element_blank(), 
-                     panel.grid.minor = element_blank(),
-                     panel.background = element_blank()) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(axis.ticks = element_blank()) +
-  theme(axis.line = element_line(size = 0.2, color = 'black')) +
-  theme(legend.key=element_blank(), legend.background=element_blank())
-
-## Common color scheme for areas
-area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'gray16', 'company creek' = 'gray24', 'lower mcgregor' = 'gray32', 'mcgregor' = 'gray40', 'upper mcgregor' = 'gray48', 'bullion' = 'gray56')
-
-## And for treatments.
-treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
-                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'gold1',
-                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
-                      'thin_thin_burn' = 'gray40', 'thin_thin_burn_burn' = 'gray20', 'thin_thin_burn_burn_burn' = 'gray0')
-```
-
 ```{r setup dataframes}
 trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
   ## -2 means early pretreatment read, only want to use most recent pretreatment read
@@ -82,15 +62,35 @@ trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
 head(trees)
 ```
 
-# Graphing code  
+# Graphing code 
 
-## Faceted graphs  
+```{r graphing themes}
+## Theme for graphing.
+simpletheme <- theme(panel.grid.major = element_blank(), 
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank()) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks = element_blank()) +
+  theme(axis.line = element_line(size = 0.2, color = 'black')) +
+  theme(legend.key=element_blank(), legend.background=element_blank())
+
+## Common color scheme for areas
+area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'gray16', 'company creek' = 'gray24', 'lower mcgregor' = 'gray32', 'mcgregor' = 'gray40', 'upper mcgregor' = 'gray48', 'bullion' = 'gray56')
+
+## And for treatments.
+treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
+                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'gold1',
+                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
+                      'thin_thin_burn' = 'gray60', 'thin_thin_burn_burn' = 'gray30', 'thin_thin_burn_burn_burn' = 'gray0')
+```
 
 For this first set of graphs, I've faceted out the different combinations of thinning and burning to visualize how important variables respond with time since different types of treatments.  This way of thinking is most aligned with the fuels longevity report; it does a much better job of looking at time since treatment then the effects of the treatment itself. 
 
 I've colored the lines by the eight named areas (analagous to stands?).  They're in a gradient of darker gray for farther downvalley to lighter colors for farther upvalley, so that we can get some indication of the spatial spread of different treatments and of whether there are any systematic biases by location.  
 
 In all graphs below, I've set the y axis so that it cuts out some big outliers, because otherwise it gets even more difficult to distinguish different plots.  But you'll see the line coming in off the top of the graph.  You'll also notice some of the plots have an outlier point somewhere in their timeline and/or have some weird discontinuities in time.  In all cases, I've left these in without looking for the source of the issue to see if Karen has any insights.  I've made all the graphs really tall to spread out the lines as much as possible. 
+
+## Faceted graphs 
 
 ```{r basal area faceted graph, fig.width = 12, fig.height = 10}
 basal_area <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot)) +
