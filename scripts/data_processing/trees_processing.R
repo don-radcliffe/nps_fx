@@ -184,7 +184,8 @@ hist(trees$number_of_na)
 ## Here I'm making the key for plot level information,
 ## so we don't have to hold onto a bunch of superfluous stuff when aggregating,
 ## i.e. so that we can use it like a relational database.
-plot_data <- trees %>%
+## We're using trees1 for this dataframe because it doesn't have the plots with too many dbh NAs filtered out.
+plot_data <- trees1 %>%
   ## Select relevent columns.
   select(c('plot', 'plot_utm_zone', 'plot_utm_x', 'plot_utm_y', 'area')) %>%
   ## Rid duplicate rows and sort.
@@ -195,7 +196,7 @@ plot_data <- trees %>%
 
 
 ## We need to do the same thing for plot-visit level information
-plot_visit_data <- trees %>%
+plot_visit_data <- trees1 %>%
   ## Select relavant columns.
   ## Purposefully leaving out 'monitoring_status,' redundant. 
   select(c('plot_visit', 'plot', 'area', 'year', 'date', 
