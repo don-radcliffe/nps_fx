@@ -65,103 +65,147 @@ treatment_colors <- c('pretreatment_current' = 'dodgerblue3',
 
 ## Faceted graphs 
 
-```{r one hour faceted graph, fig.width = 12, fig.height = 10}
-one_hour_facet <- ggplot(surface_fuels, aes(x = years_post, y = one_hour, group = plot)) +
+### Function for the faceted graphs:
+```{r faceted graphs}
+gg_facet <- function(var) {
+  yvar <- enquo(var)
+  ggplot(surface_fuels, aes(x = years_post, y = !!yvar, group = plot)) +
   geom_point(alpha = 0.5, size = 1.4) +
   geom_line(size = 1.1, aes(color = area)) +
   facet_grid(thins~burns, labeller = label_both) +
+  scale_color_manual(values = area_colors) +
+  xlab('years after treatment combination') +
+  theme_bw()
+}
+  
+```
+
+```{r one hour faceted graph, fig.width = 12, fig.height = 10}
+one_hour_facet <- gg_facet(one_hour) +
   ## Note my x scale cut off ten data points at the 20 years mark,
   ## mostly one thin one burn,
   ## to get better spread on most the data.
   coord_cartesian(xlim = c(-2,16), ylim = c(0,2.5)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('One hour fuels dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('one hour fuels (Megagrams per hectare)')
 one_hour_facet
 ```
 
 ```{r ten hour faceted graph, fig.width = 12, fig.height = 10}
-ten_hour_facet <- ggplot(surface_fuels, aes(x = years_post, y = ten_hour, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+ten_hour_facet <- gg_facet(ten_hour) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,10)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Ten hour fuels dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Ten hour fuels (Megagrams per hectare)')
 ten_hour_facet
 ```
 
 ```{r hundred hour faceted graph, fig.width = 12, fig.height = 10}
-hundred_hour_facet <- ggplot(surface_fuels, aes(x = years_post, y = hundred_hour, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+hundred_hour_facet <- gg_facet(hundred_hour) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,10)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Hundred hour fuels dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Hundred hour fuels (Megagrams per hectare)')
 hundred_hour_facet
 ```
 
 ```{r thousand sound faceted graph, fig.width = 12, fig.height = 10}
-thousand_sound_facet <- ggplot(surface_fuels, aes(x = years_post, y = thousand_sound, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+thousand_sound_facet <- gg_facet(thousand_sound) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,51)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Thousand hour sound fuels dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Thousand hour sound fuels (Megagrams per hectare)')
 thousand_sound_facet
 ```
 
 ```{r thousand rotten faceted graph, fig.width = 12, fig.height = 10}
-thousand_rotten_facet <- ggplot(surface_fuels, aes(x = years_post, y = thousand_rotten, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+thousand_rotten_facet <- gg_facet(thousand_rotten) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,51)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Thousand hour rotten fuels dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Thousand hour rotten fuels (Megagrams per hectare)')
 thousand_rotten_facet
 ```
 
 ```{r litter faceted graph, fig.width = 12, fig.height = 10}
-litter_facet <- ggplot(surface_fuels, aes(x = years_post, y = litter, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+litter_facet <- gg_facet(litter) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,30)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Litter dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Litter (Megagrams per hectare)')
 litter_facet
 ```
 
 ```{r duff faceted graph, fig.width = 12, fig.height = 10}
-duff_facet <- ggplot(surface_fuels, aes(x = years_post, y = duff, group = plot)) +
-  geom_point(alpha = 0.5, size = 1.4) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
+duff_facet <- gg_facet(duff) +
   coord_cartesian(xlim = c(-2,16), ylim = c(0,50)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Duff dynamics after treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('Duff (Megagrams per hectare)')
 duff_facet
+```
+
+## Longitudinal graphs
+
+### Function for the longitudinal graphs:
+```{r longitudinal graph function}
+gg_longitudinal <- function(var) {
+  yvar <- enquo(var)
+  ggplot(surface_fuels, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
+  geom_line(size = 1.1, aes(color = treatment)) + 
+  scale_color_manual(values = treatment_colors) +
+  simpletheme
+} 
+```
+
+```{r one hour longitudinal graph, fig.height=10, fig.width=12} 
+one_hour_long <- gg_longitudinal(var = one_hour) +
+  ggtitle('Longitudinal one hour fuel dynamics, North Cascades') +
+  ylab('one hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020))
+one_hour_long 
+
+```
+
+```{r ten hour longitudinal graph, fig.height=10, fig.width=12} 
+ten_hour_long <- gg_longitudinal(ten_hour) +
+  ggtitle('Longitudinal ten hour fuel dynamics, North Cascades') +
+  ylab('ten hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,10))
+ten_hour_long  
+```
+
+```{r hundred hour longitudinal graph, fig.height=10, fig.width=12} 
+hundred_hour_long <- gg_longitudinal(hundred_hour) +
+  ggtitle('Longitudinal ten hour fuel dynamics, North Cascades') +
+  ylab('hundred hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,15))
+hundred_hour_long  
+```
+
+```{r thousand hour sound longitudinal graph, fig.height=10, fig.width=12} 
+thousand_sound_long <- gg_longitudinal(thousand_sound) +
+  ggtitle('Longitudinal thousand hour sound fuel dynamics, North Cascades') +
+  ylab('hundred hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,60))
+thousand_sound_long  
+```
+
+```{r thousand hour rotten longitudinal graph, fig.height=10, fig.width=12} 
+thousand_rotten_long <- gg_longitudinal(thousand_rotten) +
+  ggtitle('Longitudinal thousand hour rotten fuel dynamics, North Cascades') +
+  ylab('thousand hour sound fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,30))
+thousand_rotten_long  
+```
+
+```{r litter longitudinal graph, fig.height=10, fig.width=12} 
+litter_long <- gg_longitudinal(litter) +
+  ggtitle('Longitudinal litter dynamics, North Cascades') +
+  ylab('litter (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,30))
+litter_long  
+```
+
+
+```{r duff longitudinal graph, fig.height=10, fig.width=12} 
+duff_long <- gg_longitudinal(duff) +
+  ggtitle('Longitudinal duff dynamics, North Cascades') +
+  ylab('duff (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,65))
+duff_long  
 ```
