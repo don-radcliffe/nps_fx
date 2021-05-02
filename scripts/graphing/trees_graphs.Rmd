@@ -59,7 +59,7 @@ trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
   ## don't see Bullion on my map, maybe it replaced a problematic older name that's farthest away.
   mutate(area = factor(area, levels = c('weaver', 'boulder', 'orchard rainbow', 'company creek',
                                         'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion')))
-head(trees)
+str(trees)
 ```
 
 # Graphing code 
@@ -92,53 +92,43 @@ In all graphs below, I've set the y axis so that it cuts out some big outliers, 
 
 ## Faceted graphs 
 
-```{r basal area faceted graph, fig.width = 12, fig.height = 10}
-basal_area <- ggplot(trees, aes(x = years_post, y = basal_area, group = plot)) +
+### Function for faceted graphs
+```{r faceted graph function}
+gg_facet <- function(var) {
+  yvar = enquo(var)
+  ggplot(trees, aes(x = years_post, y = !!yvar, group = plot)) +
   geom_point(alpha = 0.5, size = 1.4) +
   geom_line(size = 1.1, aes(color = area)) +
   facet_grid(thins~burns, labeller = label_both) +
+  scale_color_manual(values = area_colors) +
+  theme_bw() +
+  xlab('years after treatment combination')
+}
+```
+
+```{r basal area faceted graph, fig.width = 12, fig.height = 10}
+basal_area <- gg_facet(basal_area) +
   ## Note my x scale cut off ten data points at the 20 years mark,
   ## mostly one thin one burn,
   ## to get better spread on most the data.
   coord_cartesian(xlim = c(-2,16), ylim = c(0,75)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Basal area in repeat treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('basal area (meters squared per hectare)')
 basal_area
 ```
 
 ```{r density facted graph, fig.width = 12, fig.height = 10}
-density <- ggplot(trees, aes(x = years_post, y = density, group = plot)) +
-  geom_point(alpha = 0.3, size = 1.8) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
-  ## Note my x scale cut off ten data points at the 20 years mark,
-  ## mostly one thin one burn,
-  ## to get better spread on most the data.
+density <- gg_facet(density) +
   coord_cartesian(xlim = c(-2, 16), ylim = c(0, 700)) +
-  scale_color_manual(values = area_colors) +
-  theme_bw() +
   ggtitle('Density in repeat treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('density (trees per hectare)')
 density
 ```
 
 ```{r qmd faceted graph, fig.width=12, fig.height=10}
-qmd <- ggplot(trees, aes(x = years_post, y = qmd, group = plot)) +
-  geom_point(alpha = 0.3, size = 1.8) +
-  geom_line(size = 1.1, aes(color = area)) +
-  facet_grid(thins~burns, labeller = label_both) +
-  ## Note my x scale cut off ten data points at the 20 years mark,
-  ## mostly one thin one burn,
-  ## to get better spread on most the data.
-  theme_bw() +
+qmd <- gg_facet(qmd) +
   coord_cartesian(xlim = c(-2, 16), ylim = c(0,65)) +
-  scale_color_manual(values = area_colors) +
   ggtitle('Quadratic mean diameter in repeat treatment, North Cascades') +
-  xlab('years after treatment combination') +
   ylab('quadratic mean diameter (centimeters)')
 qmd
 ```
@@ -151,11 +141,18 @@ Note that the last segment of any given color is affected by the next treatment 
 
 For a finished plot about short term treatment effects, I could see us plotting the change between the most recent pretreatment read and the first posttreatment read in more of a boxplot format with each treatment combination being a different boxplot.  But for our purposes, I like the plots below a lot better because they can give us a sense of time between treatments and the order of treatments.
 
-```{r basal area longitudinal graph, fig.height=10, fig.width=12} 
-basal_area_one <- ggplot(trees, aes(x = year, y = basal_area, group = plot, color = treatment)) +
+```{r longitudinal graph function}
+gg_longitudinal <- function(var){
+  yvar = enquo(var)
+  ggplot(trees, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
   geom_line(size = 1.1, aes(color = treatment)) + 
   scale_color_manual(values = treatment_colors) +
-  simpletheme +
+  simpletheme
+}
+```
+
+```{r basal area longitudinal graph, fig.height=10, fig.width=12} 
+basal_area_one <- gg_longitudinal(basal_area) +
   ggtitle('Longitudinal basal area changes, Lake Roosevelt') +
   ylab('basal area (meters squared per hectare)') +
   coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 70))
@@ -163,10 +160,7 @@ basal_area_one
 ```
 
 ```{r density longitudinal graph, fig.width=12, fig.height=10}
-density_one <- ggplot(trees, aes(x = year, y = density, group = plot, color = treatment)) +
-  geom_line(size = 1.1, aes(color = treatment)) + 
-  scale_color_manual(values = treatment_colors) +
-  simpletheme +
+density_one <- gg_longitudinal(density) +
   ggtitle('Longitudinal density changes, Lake Roosevelt') +
   ylab('density (trees per hectare)') +
   coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 750))
@@ -174,10 +168,7 @@ density_one
 ```
 
 ```{r qmd longitudinal graph, fig.width = 12, fig.height=10}
-qmd_one <- ggplot(trees, aes(x = year, y = qmd, group = plot, color = treatment)) +
-  geom_line(size = 1.1, aes(color = treatment)) + 
-  scale_color_manual(values = treatment_colors) +
-  simpletheme +
+qmd_one <- gg_longitudinal(qmd) +
   ggtitle('Longitudinal qmd changes, Lake Roosevelt') +
   ylab('quadratic mean diameter (centimeters)') +
   coord_cartesian(xlim = c(1997, 2020))
