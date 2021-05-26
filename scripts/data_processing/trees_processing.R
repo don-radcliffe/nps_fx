@@ -21,9 +21,23 @@ conflict_prefer('filter', 'dplyr')
 import_dir_nps <- here::here('data')
 export_dir_nps <- here::here('data', 'data_tidy')
 
-trees_raw <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw.csv'), stringsAsFactors = TRUE)
+trees_raw_noca <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw_noca.csv'), stringsAsFactors = TRUE)
+trees_raw_laro <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw_laro.csv'), stringsAsFactors = TRUE)
+
 
 ##### Preprocessing ######
+
+## Need to make a column to differentiate North Cascades and Lake Roosevelt data,
+## and then combine the two csvs.
+trees_laro <- trees_raw_laro %>%
+  mutate(region = 'laro') %>%
+  ## There's an annoying i..Date column here.
+  rename(Date = 1)
+
+trees_noca <- trees_raw_noca %>%
+  mutate(region = 'noca')
+
+trees_combined <- bind_rows(trees_laro, trees_noca)
 
 ## This first long chain of pipes makes the data more R and Don friendly.
 trees1 <- trees_raw %>%
@@ -63,6 +77,7 @@ trees1 <- trees_raw %>%
   ## Plot has an annoying string of the same ten characters in front of each meaningful identifier.
   ## I'm replacing it with 'nc' to denote 'North Cascades'.
   mutate(plot = str_replace_all(plot, 'fpsme2d08-', 'nc')) %>%
+  mutate(plot = str_replace_all(plot, 'fpipo1d10-', 'lr')) %>%
   ## There are some blank rows at the top of each plot that need ridding.
   ## Quarter seems to have NAs each time this is the case, but not otherwise.
   filter(complete.cases(quarter)) %>%
