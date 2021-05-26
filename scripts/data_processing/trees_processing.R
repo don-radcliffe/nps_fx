@@ -40,7 +40,7 @@ trees_noca <- trees_raw_noca %>%
 trees_combined <- bind_rows(trees_laro, trees_noca)
 
 ## This first long chain of pipes makes the data more R and Don friendly.
-trees1 <- trees_raw %>%
+trees1 <- trees_combined %>%
   ## Use mutate to rename columns to get rid of spaces and uppercase in column names,
   ## with tolower() to get rid of uppercase in values.
   mutate(date = tolower(Date)) %>%
@@ -75,9 +75,11 @@ trees1 <- trees_raw %>%
   ## Remove the originally-named columns.
   select(c(date:visited)) %>%
   ## Plot has an annoying string of the same ten characters in front of each meaningful identifier.
-  ## I'm replacing it with 'nc' to denote 'North Cascades'.
+  ## I'm replacing it with 'nc' to denote 'North Cascades' or 'Lake Roosevelt'.
+  ## Note there's possibly 2 pipo forest zones at Lake Roosevelt.
   mutate(plot = str_replace_all(plot, 'fpsme2d08-', 'nc')) %>%
   mutate(plot = str_replace_all(plot, 'fpipo1d10-', 'lr')) %>%
+  mutate(plot = str_replace_all(plot, 'fpipo2d10-', 'lr')) %>%
   ## There are some blank rows at the top of each plot that need ridding.
   ## Quarter seems to have NAs each time this is the case, but not otherwise.
   filter(complete.cases(quarter)) %>%
@@ -109,7 +111,18 @@ trees1 <- trees_raw %>%
                                                   '07' = 'thin_thin_burn',
                                                   '08' = 'thin_thin_burn_burn',
                                                   '09' = 'thin_thin_burn_burn_burn',
-                                                  '20' = 'pileburn_thin'))) %>%
+                                                  ## 10 is seeded pileburn, ignoring difference here.
+                                                  '10' = 'pileburn',
+                                                  ## 12 'most recently a pileburn', may be some broadcast burns here.
+                                                  '12' = 'thin_thin_pileburn_pileburn',
+                                                  ## 13 two burns, most recent is broadcast, also a seeding
+                                                  '13' = 'thin_burn_burn',
+                                                  ## 14 is seeded, ignoring that here.
+                                                  '14' = 'thin_pileburn',
+                                                  '15' = 'pileburn_pileburn',
+                                                  ## 19 includes seeding, ignoring that here.
+                                                  '19' = 'pileburn_pileburn',
+                                                  '20' = 'thin_pileburn'))) %>%
   ## Let's also give numeric columns for numbers of the different treatments.
   ## There's probably a more elegant way to do this.
   ## You have to invert the order of the str_replace_all() commands to not premature replacement.
@@ -120,9 +133,11 @@ trees1 <- trees_raw %>%
                                           'thin_thin_burn' = '1',
                                           'thin_burn_burn_burn' = '3',
                                           'thin_burn_burn' = '2',
-                                          'pileburn_thin' = '0',
+                                          'thin_pileburn' = '0',
+                                          'thin_thin_pileburn_pileburn' = '0',
                                           'thin_burn' = '1',
                                           'pileburn' = '0',
+                                          'pileburn_pileburn' = '0',
                                           'burn' = '1',
                                           'thin' = '0',
                                           'pretreatment_early' = '0',
@@ -134,9 +149,11 @@ trees1 <- trees_raw %>%
                                           'thin_thin_burn' = '2',
                                           'thin_burn_burn_burn' = '1',
                                           'thin_burn_burn' = '1',
-                                          'pileburn_thin' = '1',
+                                          'thin_pileburn' = '1',
+                                          'thin_thin_pileburn_pileburn' = '2',
                                           'thin_burn' = '1',
                                           'pileburn' = '0',
+                                          'pileburn_pileburn' = '0',
                                           'burn' = '0',
                                           'thin' = '1',
                                           'pretreatment_early' = '0',
@@ -148,9 +165,11 @@ trees1 <- trees_raw %>%
                                                   'thin_thin_burn' = '0',
                                                   'thin_burn_burn_burn' = '0',
                                                   'thin_burn_burn' = '0',
-                                                  'pileburn_thin' = '1',
+                                                  'thin_pileburn' = '1',
+                                                  'thin_thin_pileburn_pileburn' = '2',
                                                   'thin_burn' = '0',
                                                   'pileburn' = '1',
+                                                  'pileburn_pileburn' = '2',
                                                   'burn' = '0',
                                                   'thin' = '0',
                                                   'pretreatment_early' = '0',
@@ -175,6 +194,8 @@ trees1 <- trees_raw %>%
   mutate(dbh = as.numeric(dbh)) %>%
   ## order live and dead.
   mutate(status = factor(status, levels = c('l','d')))
+
+View(trees1)
 
 ## Some plot-visits have a lot of NAs in the dbh column, 
 ## mostly concentrated around the immediate post-treatment read but not always.
