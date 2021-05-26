@@ -1,0 +1,191 @@
+---
+title: "trees_graphs_combined"
+author: "Don Radcliffe"
+date: "4/27/2021"
+output: html_document
+---
+
+# Introduction
+
+This script is for graphing the stand structure variables basal area, density, and qmd, in order to get a better sense of the study site for brainstorming analyses.  It includes both Lake Roosevelt and Stehekin data, the first draft that included just Stehekin data is still saved as a separate file. 
+
+# Setup and formatting code
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, read data, message = FALSE}
+require(here)
+require(dplyr)
+require(ggplot2)
+
+import_dir_tg <- here::here('data', 'data_tidy')
+export_dir_tg <- here::here('plots', 'trees')
+
+trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'), stringsAsFactors = TRUE)
+plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
+```
+
+
+```{r setup dataframes}
+trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
+  ## -2 means early pretreatment read, only want to use most recent pretreatment read
+  filter(years_post != -2) %>%
+  ## There are some weird zeros in the data that 
+  filter(status == 'l') %>%
+  ## Arrange treatments in some kind of order.
+  mutate(treatment = factor(treatment, levels = c('pretreatment_current', 'pileburn', 'pileburn_pileburn',
+                               'burn', 'thin',
+                               'thin_burn', 'thin_burn_burn', 
+                               'thin_thin_burn', 'thin_thin_burn_burn','thin_thin_burn_burn_burn',
+                               'thin_thin_pileburn_pileburn'))) %>%
+  ## Arrange areas by proximity to Stehekin, 
+  ## don't see Bullion on my map, maybe it replaced a problematic older name that's farthest away.
+  #mutate(area = factor(area, levels = c('weaver', 'boulder', 'orchard rainbow', 'company creek',
+                                        #'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion')))
+  mutate(region = factor(region, levels = c('nc', 'lr')))
+                                        
+str(trees)
+```
+
+# Graphing code 
+
+```{r graphing themes}
+## Theme for graphing.
+simpletheme <- theme(panel.grid.major = element_blank(), 
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank()) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks = element_blank()) +
+  theme(axis.line = element_line(size = 0.2, color = 'black')) +
+  theme(legend.key=element_blank(), legend.background=element_blank())
+
+## Common color scheme for areas
+#area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'gray16', 'company creek' = 'gray24', 'lower mcgregor' = 'gray32', 'mcgregor' = 'gray40', 'upper mcgregor' = 'gray48', 'bullion' = 'gray56')
+
+## And for treatments.
+treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
+                      'pileburn' = 'purple3', 'pileburn_pileburn' = 'purple4', 
+                      'burn' = 'red3', 'thin' = 'gold1',
+                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
+                      'thin_thin_burn' = 'gray60', 'thin_thin_burn_burn' = 'gray30', 'thin_thin_burn_burn_burn' = 'gray0',
+                      'thin_thin_pileburn_pileburn' = 'coral1')
+
+region_colors <- c('nc' = 'blue3', 'lr' = 'orangered')
+```
+
+For this first set of graphs, I've faceted out the different combinations of thinning and burning to visualize how important variables respond with time since different types of treatments.  This way of thinking is most aligned with the fuels longevity report; it does a much better job of looking at time since treatment then the effects of the treatment itself. 
+
+In all graphs below, I've set the y axis so that it cuts out some big outliers, because otherwise it gets even more difficult to distinguish different plots.  But you'll see the line coming in off the top of the graph.  You'll also notice some of the plots have an outlier point somewhere in their timeline and/or have some weird discontinuities in time.  In all cases, I've left these in without looking for the source of the issue to see if Karen has any insights.  I've made all the graphs really tall to spread out the lines as much as possible. 
+
+## Faceted graphs 
+
+### Function for faceted graphs
+```{r faceted graph function}
+gg_facet <- function(var) {
+  yvar = enquo(var)
+  ggplot(trees, aes(x = years_post, y = !!yvar, group = plot)) +
+  geom_point(alpha = 0.5, size = 1.4) +
+  geom_line(size = 1.1, aes(color = region)) +
+  facet_grid(thins~burns, labeller = label_both) +
+  scale_color_manual(values = region_colors) +
+  theme_bw() +
+  xlab('years after treatment combination')
+}
+```
+
+```{r basal area faceted graph, fig.width = 12, fig.height = 10}
+basal_area <- gg_facet(basal_area) +
+  ## Note my x scale cut off ten data points at the 20 years mark,
+  ## mostly one thin one burn,
+  ## to get better spread on most the data.
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,75)) +
+  ggtitle('Basal area in repeat treatment, North Cascades') +
+  ylab('basal area (meters squared per hectare)')
+basal_area
+```
+
+```{r density facted graph, fig.width = 12, fig.height = 10}
+density <- gg_facet(density) +
+  coord_cartesian(xlim = c(-2, 16), ylim = c(0, 700)) +
+  ggtitle('Density in repeat treatment, North Cascades') +
+  ylab('density (trees per hectare)')
+density
+```
+
+```{r qmd faceted graph, fig.width=12, fig.height=10}
+qmd <- gg_facet(qmd) +
+  coord_cartesian(xlim = c(-2, 16), ylim = c(0,65)) +
+  ggtitle('Quadratic mean diameter in repeat treatment, North Cascades') +
+  ylab('quadratic mean diameter (centimeters)')
+qmd
+```
+
+## Longitudinal Graphs
+
+Below I've graphed plots in their entirety, with different segments of the lines colored by treatment in a way that hopefully makes some kind of sense.  This helps give a better sense of the history of a plot and the effects of a treatment.  I used year on the x axis because it gave a greater separation of the lines than time since treatment, and will it make it possible to identify specific clusters of plots on the graph.
+
+Note that the last segment of any given color is affected by the next treatment since this is a trendline; I see where this could be confusing but couldn't think of a better alternative right off the bat.  One thing we could try to do is different shapes for the point where each treatment happens and not color the lines, but I think this would make it harder to track the plot history in it's entirety, given the spaghetti of lines.
+
+For a finished plot about short term treatment effects, I could see us plotting the change between the most recent pretreatment read and the first posttreatment read in more of a boxplot format with each treatment combination being a different boxplot.  But for our purposes, I like the plots below a lot better because they can give us a sense of time between treatments and the order of treatments.
+
+```{r longitudinal graph function}
+gg_longitudinal <- function(var){
+  yvar = enquo(var)
+  ggplot(trees, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
+  geom_line(size = 1.1, aes(color = treatment)) + 
+  scale_color_manual(values = treatment_colors) +
+  simpletheme
+}
+```
+
+```{r basal area longitudinal graph, fig.height=10, fig.width=12} 
+basal_area_one <- gg_longitudinal(basal_area) +
+  ggtitle('Longitudinal basal area changes, Lake Roosevelt') +
+  ylab('basal area (meters squared per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 70))
+basal_area_one  
+```
+
+```{r density longitudinal graph, fig.width=12, fig.height=10}
+density_one <- gg_longitudinal(density) +
+  ggtitle('Longitudinal density changes, Lake Roosevelt') +
+  ylab('density (trees per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 750))
+density_one
+```
+
+```{r qmd longitudinal graph, fig.width = 12, fig.height=10}
+qmd_one <- gg_longitudinal(qmd) +
+  ggtitle('Longitudinal qmd changes, Lake Roosevelt') +
+  ylab('quadratic mean diameter (centimeters)') +
+  coord_cartesian(xlim = c(1997, 2020))
+qmd_one
+```
+
+# Initial thoughts
+
+It's really cool to get to check out this kind of longtitudinal data.  It looks like what we can really compare is burn, thinburn, and thinburnburn, without much longevity for burn but with 15+ year longevity for the other two treatments.  Adding the Lake Roosevelt data may help fill out this matrix a bit, and we could also talk about eventually bringing in data from sites from other states. 
+
+One idea I've had floating around was to compare five year responses of the different treatments, which will let us bring in the burn data.  For the thin burn and thin burn burn, we could include them in our fuels longevity report, although there may be some psuedoreplication issues since the long-running plots seem to have come from the same areas (moreso with thinburnburn).
+
+It certainly looks like pretreatment value is critically important.  It also looks like there are possibly some diminishing returns to repeated treatment.  Maybe this is by design in the case of multiple thinning (i.e. subsequent thins are less intense than the initial), in which case we'll have to think about using thin as a continous variable or using a cost benefit analysis.  Patterns could of course be different with the other response variables. 
+
+We'll likely need to think about accounting for spatial autocorrelation and/or using a random effects framework with the different stands. I've also been wondering about the effect of different treatment histories like order of treatments or time between treatments for something like thinburn or thinburnburn, but it looks like in many cases comparable plots have similar temporal histories, likely they're from the same group of stands.  The order of thinning and burning is variable though, which will be important to keep in mind.
+
+Some questions for Karen:
+
+1) Can you please pass along the link for the Lake Roosevelt dataset?
+
+2) Do you know why there are NA's in many of the dbh columns?  This mostly affected the immediate year zero posttreatment data, but not exclusively. 
+
+3) Do you know if there are canopy base height data?  I didn't see them on the tree data file. 
+
+4) What's your sense of how much the 'Macroplot Purpose' study areas, which I've just renamed to area, act as distinct stands vs. more administrative boundaries?  Some of these are contiguous so just wondering how much stock to put in the distinctions. 
+
+5) What's your sense of how much different second and third thins/burns were purposefully implemented differently than initial treatments?
+
+6) What was the selection process for retreatment?
+
+This is just my first pass at the data, and I'll give it lots more thought!  Looking forward to hearing your insights, especially from Karen. 
