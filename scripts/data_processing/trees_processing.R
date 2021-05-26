@@ -96,6 +96,8 @@ trees1 <- trees_combined %>%
   ## The .after command places it right after monitoring status code.
   mutate(years_post = str_sub(monitoring_status, start = -2), .after = monitoring_status) %>%
   mutate(treatment_code = str_sub(monitoring_status, end = 2), .after = monitoring_status) %>%
+  ## Get region (north cascades or lake roosevelt) from the prefix for the plots.
+  mutate(region = str_sub(plot, start = 1, end = 2), .after = plot) %>%
   ## Now copy the the treatment code column,
   ## so we can turn the codes into treatment names while keeping the treatment code column as a check.
   mutate(treatment = treatment_code, .after = years_post) %>%
@@ -188,14 +190,20 @@ trees1 <- trees_combined %>%
   mutate(year = format(as.Date(date, format='%Y'), '%Y'), .after = date) %>%
   ## Now we need a unique identifier for each plot visit so we can summarize data.
   unite(plot_visit, c('plot', 'year', 'treatment_code', 'years_post'), sep = '_', remove = FALSE) %>%
-  ## And lastly, convert vector types for columns we'll work with below
+  ## Convert vector types for columns we'll work with below
   mutate(plot_visit = as.factor(plot_visit)) %>%
   mutate(species = as.factor(species)) %>%
   mutate(dbh = as.numeric(dbh)) %>%
   ## order live and dead.
-  mutate(status = factor(status, levels = c('l','d')))
-
-View(trees1)
+  mutate(status = factor(status, levels = c('l','d'))) %>%
+  ## Gifford clover at LARO has a bunch of rows with species label 'bare' with NAs for data, 
+  ## removing those here.
+  filter(species != 'bare') %>%
+  ## There's also a row with a blank in species, changing to 'unkn',
+  ## str_replace_all won't deal with blanks.
+  mutate(species = sub(x = species, "^$", "unkn")) %>%
+  ## One tree has two 'nas' for status, but was alive both before and after those NAs.  Fixing:
+  mutate(status = replace_na(status, 'l'))
 
 ## Some plot-visits have a lot of NAs in the dbh column, 
 ## mostly concentrated around the immediate post-treatment read but not always.
@@ -223,7 +231,7 @@ hist(trees$number_of_na)
 ## We're using trees1 for this dataframe because it doesn't have the plots with too many dbh NAs filtered out.
 plot_data <- trees1 %>%
   ## Select relevent columns.
-  select(c('plot', 'plot_utm_zone', 'plot_utm_x', 'plot_utm_y', 'area')) %>%
+  select(c('plot', 'plot_utm_zone', 'plot_utm_x', 'plot_utm_y', 'region', 'area')) %>%
   ## Rid duplicate rows and sort.
   unique() %>%
   arrange(plot)
@@ -235,7 +243,7 @@ plot_data <- trees1 %>%
 plot_visit_data <- trees1 %>%
   ## Select relavant columns.
   ## Purposefully leaving out 'monitoring_status,' redundant. 
-  select(c('plot_visit', 'plot', 'area', 'year', 'date', 
+  select(c('plot_visit', 'plot', 'region', 'area', 'year', 'date', 
            'treatment_code', 'years_post', 'treatment', 
            'burns', 'thins', 'pileburns', 'monitoring_status')) %>%
   ## Rid duplicate rows and sort.
@@ -263,7 +271,7 @@ basal_area_spp <- trees %>%
   dcast(plot_visit + species + status ~ ., value.var = 'basal_area', sum) %>%
   rename('basal_area' = '.') %>%
   ## Fill out all the species in each plot.
-  pivot_wider(names_from = species, values_from = basal_area) %>%
+  pivot_wider(names_from = species, values_from = basal_area)%>%
   pivot_longer(c(pipo:abgr), names_to = 'species', values_to = 'basal_area') %>%
   ## Make zeros from the NAs that result.
   replace(is.na(.), 0) %>%
