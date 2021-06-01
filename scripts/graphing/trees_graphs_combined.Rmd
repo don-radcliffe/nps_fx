@@ -23,8 +23,8 @@ require(ggplot2)
 import_dir_tg <- here::here('data', 'data_tidy')
 export_dir_tg <- here::here('plots', 'trees')
 
-trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'), stringsAsFactors = TRUE)
-plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
+trees_raw <- read.csv(file.path(import_dir_tg, 'trees_tidy.csv'))
+plot_data_raw <- read.csv(file.path(import_dir_tg, 'plot_visit_data.csv'))
 ```
 
 
@@ -39,12 +39,19 @@ trees <- full_join(trees_raw, plot_data_raw, by = 'plot_visit') %>%
                                'burn', 'thin',
                                'thin_burn', 'thin_burn_burn', 
                                'thin_thin_burn', 'thin_thin_burn_burn','thin_thin_burn_burn_burn',
-                               'thin_thin_pileburn_pileburn'))) %>%
-  ## Arrange areas by proximity to Stehekin, 
+                               'thin_pileburn', 'thin_thin_pileburn_pileburn'))) %>%
+  ## Arrange areas by proximity to Stehekin for North Cascades, 
+  ## then for Lake Roosevelt by proximity to the Grand Coulee Dam
   ## don't see Bullion on my map, maybe it replaced a problematic older name that's farthest away.
-  #mutate(area = factor(area, levels = c('weaver', 'boulder', 'orchard rainbow', 'company creek',
-                                        #'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion')))
-  mutate(region = factor(region, levels = c('nc', 'lr')))
+  mutate(area = factor(area, levels = c(## North Cascades
+                                        'weaver', 'boulder', 'orchard rainbow', 'company creek',
+                                        'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion',
+                                        ## Lake Roosevelt
+                                        'sterling valley', 'ft. spokane', 'ponderosa', 'riverway b',
+                                        'enterprise', 'clark', 'gifford ferry', 'gifford clover', 
+                                        'copa', 'bradbury beach', 'ricky point',
+                                        'ricky north', 'kettle falls', 'log yard c', 'evans', 'north gorge'))) %>%
+  mutate(region = factor(region, levels = c('north cascades', 'lake roosevelt')))
                                         
 str(trees)
 ```
@@ -66,13 +73,13 @@ simpletheme <- theme(panel.grid.major = element_blank(),
 
 ## And for treatments.
 treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
-                      'pileburn' = 'purple3', 'pileburn_pileburn' = 'purple4', 
+                      'pileburn' = 'purple1', 'pileburn_pileburn' = 'purple3', 
                       'burn' = 'red3', 'thin' = 'gold1',
                       'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
                       'thin_thin_burn' = 'gray60', 'thin_thin_burn_burn' = 'gray30', 'thin_thin_burn_burn_burn' = 'gray0',
-                      'thin_thin_pileburn_pileburn' = 'coral1')
+                      'thin_pileburn' = 'coral1', 'thin_thin_pileburn_pileburn' = 'coral3')
 
-region_colors <- c('nc' = 'blue3', 'lr' = 'orangered')
+region_colors <- c('north cascades' = 'blue3', 'lake roosevelt' = 'orangered')
 ```
 
 For this first set of graphs, I've faceted out the different combinations of thinning and burning to visualize how important variables respond with time since different types of treatments.  This way of thinking is most aligned with the fuels longevity report; it does a much better job of looking at time since treatment then the effects of the treatment itself. 
@@ -91,6 +98,8 @@ gg_facet <- function(var) {
   facet_grid(thins~burns, labeller = label_both) +
   scale_color_manual(values = region_colors) +
   theme_bw() +
+  theme(legend.position = 'bottom') +
+  theme(legend.title = element_blank()) +
   xlab('years after treatment combination')
 }
 ```
@@ -101,7 +110,7 @@ basal_area <- gg_facet(basal_area) +
   ## mostly one thin one burn,
   ## to get better spread on most the data.
   coord_cartesian(xlim = c(-2,16), ylim = c(0,75)) +
-  ggtitle('Basal area in repeat treatment, North Cascades') +
+  ggtitle('Basal area in repeat treatment, NPS Fire Effects Washington') +
   ylab('basal area (meters squared per hectare)')
 basal_area
 ```
@@ -109,7 +118,7 @@ basal_area
 ```{r density facted graph, fig.width = 12, fig.height = 10}
 density <- gg_facet(density) +
   coord_cartesian(xlim = c(-2, 16), ylim = c(0, 700)) +
-  ggtitle('Density in repeat treatment, North Cascades') +
+  ggtitle('Density in repeat treatment, NPS Fire Effects Washington') +
   ylab('density (trees per hectare)')
 density
 ```
@@ -117,32 +126,38 @@ density
 ```{r qmd faceted graph, fig.width=12, fig.height=10}
 qmd <- gg_facet(qmd) +
   coord_cartesian(xlim = c(-2, 16), ylim = c(0,65)) +
-  ggtitle('Quadratic mean diameter in repeat treatment, North Cascades') +
+  ggtitle('Quadratic mean diameter in repeat treatment, NPS Fire Effects Washington') +
   ylab('quadratic mean diameter (centimeters)')
 qmd
 ```
 
 ## Longitudinal Graphs
 
-Below I've graphed plots in their entirety, with different segments of the lines colored by treatment in a way that hopefully makes some kind of sense.  This helps give a better sense of the history of a plot and the effects of a treatment.  I used year on the x axis because it gave a greater separation of the lines than time since treatment, and will it make it possible to identify specific clusters of plots on the graph.
+Below I delete some areas with very few observations, to simplify the longitudinal graphs which are gridded by area
+```{r remove areas for gridding}
+trees_for_long <- trees %>%
+  filter(area != 'copa' & area != 'gifford ferry' & area != 'log yard c' & 
+           area != 'ricky north' & area != 'ponderosa' & area != 'riverway b' &
+           area != 'lower mcgregor' & area != 'mcgregor')
+```
 
-Note that the last segment of any given color is affected by the next treatment since this is a trendline; I see where this could be confusing but couldn't think of a better alternative right off the bat.  One thing we could try to do is different shapes for the point where each treatment happens and not color the lines, but I think this would make it harder to track the plot history in it's entirety, given the spaghetti of lines.
 
-For a finished plot about short term treatment effects, I could see us plotting the change between the most recent pretreatment read and the first posttreatment read in more of a boxplot format with each treatment combination being a different boxplot.  But for our purposes, I like the plots below a lot better because they can give us a sense of time between treatments and the order of treatments.
 
 ```{r longitudinal graph function}
 gg_longitudinal <- function(var){
   yvar = enquo(var)
-  ggplot(trees, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
+  ggplot(trees_for_long, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
+  facet_wrap(area ~ region) +
   geom_line(size = 1.1, aes(color = treatment)) + 
   scale_color_manual(values = treatment_colors) +
-  simpletheme
+  simpletheme +
+  theme(axis.title.x = element_blank())
 }
 ```
 
 ```{r basal area longitudinal graph, fig.height=10, fig.width=12} 
 basal_area_one <- gg_longitudinal(basal_area) +
-  ggtitle('Longitudinal basal area changes, Lake Roosevelt') +
+  ggtitle('Longitudinal basal area changes, NPS Fire Washington') +
   ylab('basal area (meters squared per hectare)') +
   coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 70))
 basal_area_one  
@@ -150,7 +165,7 @@ basal_area_one
 
 ```{r density longitudinal graph, fig.width=12, fig.height=10}
 density_one <- gg_longitudinal(density) +
-  ggtitle('Longitudinal density changes, Lake Roosevelt') +
+  ggtitle('Longitudinal density changes, NPS Fire Effects Washington') +
   ylab('density (trees per hectare)') +
   coord_cartesian(xlim = c(1997, 2020), ylim = c(0, 750))
 density_one
@@ -158,7 +173,7 @@ density_one
 
 ```{r qmd longitudinal graph, fig.width = 12, fig.height=10}
 qmd_one <- gg_longitudinal(qmd) +
-  ggtitle('Longitudinal qmd changes, Lake Roosevelt') +
+  ggtitle('Longitudinal qmd changes, NPS Fire Effects Washington') +
   ylab('quadratic mean diameter (centimeters)') +
   coord_cartesian(xlim = c(1997, 2020))
 qmd_one
