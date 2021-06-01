@@ -29,13 +29,10 @@ trees_raw_laro <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw_laro.cs
 
 ## Need to make a column to differentiate North Cascades and Lake Roosevelt data,
 ## and then combine the two csvs.
-trees_laro <- trees_raw_laro %>%
-  mutate(region = 'Lake Roosevelt') %>%
-  ## There's an annoying i..Date column here.
+trees_laro <- trees_raw_laro
   rename(Date = 1)
 
-trees_noca <- trees_raw_noca %>%
-  mutate(region = 'North Cascades')
+trees_noca <- trees_raw_noca
 
 trees_combined <- bind_rows(trees_laro, trees_noca)
 
@@ -204,7 +201,10 @@ trees1 <- trees_combined %>%
   ## str_replace_all won't deal with blanks.
   mutate(species = sub(x = species, "^$", "unkn")) %>%
   ## One tree has two 'nas' for status, but was alive both before and after those NAs.  Fixing:
-  mutate(status = replace_na(status, 'l'))
+  mutate(status = replace_na(status, 'l')) %>%
+  ## Get rid of spaces that area causing duplicate labels for kettle falls and ricky point areas
+  mutate(area = str_replace_all(area, c('ricky north ' = 'ricky north', 'kettle falls ' = 'kettle falls',
+                                        'evans ' = 'evans')))
 
 ## Some plot-visits have a lot of NAs in the dbh column, 
 ## mostly concentrated around the immediate post-treatment read but not always.
