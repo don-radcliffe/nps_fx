@@ -98,6 +98,7 @@ trees1 <- trees_combined %>%
   mutate(treatment_code = str_sub(monitoring_status, end = 2), .after = monitoring_status) %>%
   ## Get region (north cascades or lake roosevelt) from the prefix for the plots.
   mutate(region = str_sub(plot, start = 1, end = 2), .after = plot) %>%
+  mutate(region = str_replace_all(region, c('lr' = 'Lake Roosevelt', 'nc' = 'North Cascades'))) %>%
   ## Now copy the the treatment code column,
   ## so we can turn the codes into treatment names while keeping the treatment code column as a check.
   mutate(treatment = treatment_code, .after = years_post) %>%
