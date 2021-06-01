@@ -30,12 +30,12 @@ trees_raw_laro <- read.csv(file.path(import_dir_nps, 'data_raw/trees_raw_laro.cs
 ## Need to make a column to differentiate North Cascades and Lake Roosevelt data,
 ## and then combine the two csvs.
 trees_laro <- trees_raw_laro %>%
-  mutate(region = 'laro') %>%
+  mutate(region = 'Lake Roosevelt') %>%
   ## There's an annoying i..Date column here.
   rename(Date = 1)
 
 trees_noca <- trees_raw_noca %>%
-  mutate(region = 'noca')
+  mutate(region = 'North Cascades')
 
 trees_combined <- bind_rows(trees_laro, trees_noca)
 
