@@ -82,9 +82,6 @@ treatment_colors <- c('pretreatment_current' = 'dodgerblue3',
 region_colors <- c('north cascades' = 'blue3', 'lake roosevelt' = 'orangered')
 ```
 
-For this first set of graphs, I've faceted out the different combinations of thinning and burning to visualize how important variables respond with time since different types of treatments.  This way of thinking is most aligned with the fuels longevity report; it does a much better job of looking at time since treatment then the effects of the treatment itself. 
-
-In all graphs below, I've set the y axis so that it cuts out some big outliers, because otherwise it gets even more difficult to distinguish different plots.  But you'll see the line coming in off the top of the graph.  You'll also notice some of the plots have an outlier point somewhere in their timeline and/or have some weird discontinuities in time.  In all cases, I've left these in without looking for the source of the issue to see if Karen has any insights.  I've made all the graphs really tall to spread out the lines as much as possible. 
 
 ## Faceted graphs 
 
