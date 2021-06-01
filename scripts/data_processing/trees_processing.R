@@ -204,7 +204,7 @@ trees1 <- trees_combined %>%
   mutate(status = replace_na(status, 'l')) %>%
   ## Get rid of spaces that area causing duplicate labels for kettle falls and ricky point areas
   mutate(area = str_replace_all(area, c('ricky north ' = 'ricky north', 'kettle falls ' = 'kettle falls',
-                                        'evans ' = 'evans')))
+                                        'evans ' = 'evans', 'gifford clover ' = 'gifford clover')))
 
 ## Some plot-visits have a lot of NAs in the dbh column, 
 ## mostly concentrated around the immediate post-treatment read but not always.
