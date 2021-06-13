@@ -31,10 +31,10 @@ year <- plot_visit_data %>%
 
 ## Combine laro and noca.
 surface_fuels_noca <- surface_fuels_raw_noca %>%
-  mutate(region = 'North Cascades')
+  mutate(region = 'north cascades')
 
 surface_fuels_laro <- surface_fuels_raw_laro %>%
-  mutate(region = 'Lake Roosevelt') %>%
+  mutate(region = 'lake roosevelt') %>%
   rename(Macroplot = 1)
 
 surface_fuels_combined <- surface_fuels_noca %>%

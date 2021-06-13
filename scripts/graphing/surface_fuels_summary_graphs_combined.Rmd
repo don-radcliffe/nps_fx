@@ -1,0 +1,211 @@
+---
+title: "surface_fuel_summary_graphs"
+author: "Don Radcliffe"
+date: "5/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, read data, message = FALSE}
+require(here)
+require(dplyr)
+require(ggplot2)
+
+import_dir_sfg <- here::here('data', 'data_tidy')
+export_dir_sfg <- here::here('plots', 'surface_fuels')
+
+surface_fuels_raw <- read.csv(file.path(import_dir_sfg, 'surface_fuels_report_tidy.csv'), stringsAsFactors = TRUE)
+plot_data_raw <- read.csv(file.path(import_dir_sfg, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
+```
+
+```{r format dataframe}
+surface_fuels <- surface_fuels_raw %>%
+  full_join(plot_data_raw, by = c('plot_visit')) %>%
+  ## Each dataframe had one row missing in the join, 
+  ## they appear to be from entirely different plots.
+  filter(complete.cases(one_hour)) %>%
+  filter(complete.cases(year)) %>%
+  ## Take out the early pretreatment reads.
+  filter(years_post > -2) %>%
+  ## Arrange treatments in some kind of order.
+  mutate(treatment = factor(treatment, levels = c('pretreatment_current', 'pileburn', 
+                               'burn', 'thin',
+                               'thin_burn', 'thin_burn_burn', 
+                               'thin_thin_burn', 'thin_thin_burn_burn','thin_thin_burn_burn_burn'))) %>%
+  ## Arrange areas by proximity to Stehekin, 
+  ## don't see Bullion on my map, maybe it replaced a problematic older name that's farthest away.
+  mutate(area = factor(area, levels = c('weaver', 'boulder', 'orchard rainbow', 'company creek',
+                                        'lower mcgregor', 'mcgregor', 'upper mcgregor', 'bullion')))
+str(surface_fuels)
+```
+
+# Graphing code
+```{r graphing themes}
+## Theme for graphing.
+simpletheme <- theme(panel.grid.major = element_blank(), 
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank()) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks = element_blank()) +
+  theme(axis.line = element_line(size = 0.2, color = 'black')) +
+  theme(legend.key=element_blank(), legend.background=element_blank())
+
+## Common color scheme for areas
+area_colors <- c('weaver' = 'gray0', 'boulder' = 'gray8', 'orchard rainbow' = 'gray16', 'company creek' = 'gray24', 'lower mcgregor' = 'gray32', 'mcgregor' = 'gray40', 'upper mcgregor' = 'gray48', 'bullion' = 'gray56')
+
+## And for treatments.
+treatment_colors <- c('pretreatment_current' = 'dodgerblue3', 
+                      'pileburn' = 'purple3', 'burn' = 'red3', 'thin' = 'gold1',
+                      'thin_burn' = 'gold3', 'thin_burn_burn' = 'tan4',
+                      'thin_thin_burn' = 'gray60', 'thin_thin_burn_burn' = 'gray30', 'thin_thin_burn_burn_burn' = 'gray0')
+```
+
+## Faceted graphs 
+
+### Function for the faceted graphs:
+```{r faceted graphs}
+gg_facet <- function(var) {
+  yvar <- enquo(var)
+  ggplot(surface_fuels, aes(x = years_post, y = !!yvar, group = plot)) +
+  geom_point(alpha = 0.5, size = 1.4) +
+  geom_line(size = 1.1, aes(color = area)) +
+  facet_grid(thins~burns, labeller = label_both) +
+  scale_color_manual(values = area_colors) +
+  xlab('years after treatment combination') +
+  theme_bw()
+}
+  
+```
+
+```{r one hour faceted graph, fig.width = 12, fig.height = 10}
+one_hour_facet <- gg_facet(one_hour) +
+  ## Note my x scale cut off ten data points at the 20 years mark,
+  ## mostly one thin one burn,
+  ## to get better spread on most the data.
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,2.5)) +
+  ggtitle('One hour fuels dynamics after treatment, North Cascades') +
+  ylab('one hour fuels (Megagrams per hectare)')
+one_hour_facet
+```
+
+```{r ten hour faceted graph, fig.width = 12, fig.height = 10}
+ten_hour_facet <- gg_facet(ten_hour) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,10)) +
+  ggtitle('Ten hour fuels dynamics after treatment, North Cascades') +
+  ylab('Ten hour fuels (Megagrams per hectare)')
+ten_hour_facet
+```
+
+```{r hundred hour faceted graph, fig.width = 12, fig.height = 10}
+hundred_hour_facet <- gg_facet(hundred_hour) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,10)) +
+  ggtitle('Hundred hour fuels dynamics after treatment, North Cascades') +
+  ylab('Hundred hour fuels (Megagrams per hectare)')
+hundred_hour_facet
+```
+
+```{r thousand sound faceted graph, fig.width = 12, fig.height = 10}
+thousand_sound_facet <- gg_facet(thousand_sound) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,51)) +
+  ggtitle('Thousand hour sound fuels dynamics after treatment, North Cascades') +
+  ylab('Thousand hour sound fuels (Megagrams per hectare)')
+thousand_sound_facet
+```
+
+```{r thousand rotten faceted graph, fig.width = 12, fig.height = 10}
+thousand_rotten_facet <- gg_facet(thousand_rotten) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,51)) +
+  ggtitle('Thousand hour rotten fuels dynamics after treatment, North Cascades') +
+  ylab('Thousand hour rotten fuels (Megagrams per hectare)')
+thousand_rotten_facet
+```
+
+```{r litter faceted graph, fig.width = 12, fig.height = 10}
+litter_facet <- gg_facet(litter) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,30)) +
+  ggtitle('Litter dynamics after treatment, North Cascades') +
+  ylab('Litter (Megagrams per hectare)')
+litter_facet
+```
+
+```{r duff faceted graph, fig.width = 12, fig.height = 10}
+duff_facet <- gg_facet(duff) +
+  coord_cartesian(xlim = c(-2,16), ylim = c(0,50)) +
+  ggtitle('Duff dynamics after treatment, North Cascades') +
+  ylab('Duff (Megagrams per hectare)')
+duff_facet
+```
+
+## Longitudinal graphs
+
+### Function for the longitudinal graphs:
+```{r longitudinal graph function}
+gg_longitudinal <- function(var) {
+  yvar <- enquo(var)
+  ggplot(surface_fuels, aes(x = year, y = !!yvar, group = plot, color = treatment)) +
+  geom_line(size = 1.1, aes(color = treatment)) + 
+  scale_color_manual(values = treatment_colors) +
+  simpletheme
+} 
+```
+
+```{r one hour longitudinal graph, fig.height=10, fig.width=12} 
+one_hour_long <- gg_longitudinal(var = one_hour) +
+  ggtitle('Longitudinal one hour fuel dynamics, North Cascades') +
+  ylab('one hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020))
+one_hour_long 
+
+```
+
+```{r ten hour longitudinal graph, fig.height=10, fig.width=12} 
+ten_hour_long <- gg_longitudinal(ten_hour) +
+  ggtitle('Longitudinal ten hour fuel dynamics, North Cascades') +
+  ylab('ten hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,10))
+ten_hour_long  
+```
+
+```{r hundred hour longitudinal graph, fig.height=10, fig.width=12} 
+hundred_hour_long <- gg_longitudinal(hundred_hour) +
+  ggtitle('Longitudinal ten hour fuel dynamics, North Cascades') +
+  ylab('hundred hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,15))
+hundred_hour_long  
+```
+
+```{r thousand hour sound longitudinal graph, fig.height=10, fig.width=12} 
+thousand_sound_long <- gg_longitudinal(thousand_sound) +
+  ggtitle('Longitudinal thousand hour sound fuel dynamics, North Cascades') +
+  ylab('hundred hour fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,60))
+thousand_sound_long  
+```
+
+```{r thousand hour rotten longitudinal graph, fig.height=10, fig.width=12} 
+thousand_rotten_long <- gg_longitudinal(thousand_rotten) +
+  ggtitle('Longitudinal thousand hour rotten fuel dynamics, North Cascades') +
+  ylab('thousand hour sound fuels (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,30))
+thousand_rotten_long  
+```
+
+```{r litter longitudinal graph, fig.height=10, fig.width=12} 
+litter_long <- gg_longitudinal(litter) +
+  ggtitle('Longitudinal litter dynamics, North Cascades') +
+  ylab('litter (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,30))
+litter_long  
+```
+
+
+```{r duff longitudinal graph, fig.height=10, fig.width=12} 
+duff_long <- gg_longitudinal(duff) +
+  ggtitle('Longitudinal duff dynamics, North Cascades') +
+  ylab('duff (Megagrams per hectare)') +
+  coord_cartesian(xlim = c(1997, 2020), ylim = c(0,65))
+duff_long  
+```
