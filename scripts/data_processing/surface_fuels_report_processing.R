@@ -30,11 +30,10 @@ year <- plot_visit_data %>%
   select(plot, monitoring_status, year)
 
 ## Combine laro and noca.
-surface_fuels_noca <- surface_fuels_raw_noca %>%
-  mutate(region = 'north cascades')
+surface_fuels_noca <- surface_fuels_raw_noca
 
 surface_fuels_laro <- surface_fuels_raw_laro %>%
-  mutate(region = 'lake roosevelt') %>%
+  ## macroplot got an annoying i.. name
   rename(Macroplot = 1)
 
 surface_fuels_combined <- surface_fuels_noca %>%
@@ -61,7 +60,9 @@ surface_fuels <- surface_fuels_combined %>%
   mutate(years_post = str_sub(monitoring_status, start = -2), .after = monitoring_status) %>%
   mutate(treatment_code = str_sub(monitoring_status, end = 2), .after = monitoring_status) %>%
   ## Also need to get the plot name formatted.
-  mutate(plot = str_replace_all(macroplot, 'FPSME2D08-', 'nc')) %>%
+  mutate(plot = str_replace_all(macroplot, c('FPSME2D08-' = 'nc',
+                                             'FPIPO1D10-' = 'lr',
+                                             'FPIPO2D10-'= 'lr'))) %>%
   ## Now we can join with year.
   full_join(year, by = c('plot', 'monitoring_status')) %>%
   ## We had one observation in the year dataframe (derived from trees) that wasn't in fuels.
@@ -76,3 +77,4 @@ surface_fuels <- surface_fuels_combined %>%
 
 ## Export if desired.
 #write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
+View(surface_fuels)
