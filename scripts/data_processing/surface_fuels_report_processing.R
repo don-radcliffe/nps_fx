@@ -21,15 +21,27 @@ import_dir_sfs <- here::here('data', 'data_raw')
 import_dir_sfs_tidy <- here::here('data', 'data_tidy')
 export_dir_sfs <- here::here('data', 'data_tidy')
 
-surface_fuels_raw <- read.csv(file.path(import_dir_sfs, 'surface_fuels_report_raw.csv'), stringsAsFactors = TRUE)
+surface_fuels_raw_noca <- read.csv(file.path(import_dir_sfs, 'surface_fuels_report_raw_noca.csv'), stringsAsFactors = TRUE)
+surface_fuels_raw_laro <- read.csv(file.path(import_dir_sfs, 'surface_fuels_report_raw_laro.csv'), stringsAsFactors = TRUE)
 plot_visit_data <- read.csv(file.path(import_dir_sfs_tidy, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
 
-## To get the year for my plot_visit column
+## To get the year for my plot_visit column.
 year <- plot_visit_data %>%
   select(plot, monitoring_status, year)
 
+## Combine laro and noca.
+surface_fuels_noca <- surface_fuels_raw_noca %>%
+  mutate(region = 'North Cascades')
+
+surface_fuels_laro <- surface_fuels_raw_laro %>%
+  mutate(region = 'Lake Roosevelt') %>%
+  rename(Macroplot = 1)
+
+surface_fuels_combined <- surface_fuels_noca %>%
+  bind_rows(surface_fuels_laro)
+
 ## Values are in kg/m^2 except for second set of duff and litter measurements
-surface_fuels <- surface_fuels_raw %>%
+surface_fuels <- surface_fuels_combined %>%
   rename(c('macroplot' = Macroplot, 'monitoring_status' = Monitoring.Status,
            'one_hour' = X1.hr, 'ten_hour' = X10.hr, 'hundred_hour' = X100.hr, 'fwd' = X1.100.hr, 
            'thousand_sound' = X1000.hr.sound, 'thousand_rotten' = X1000.hr.rotten, 
