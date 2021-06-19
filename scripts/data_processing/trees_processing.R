@@ -349,3 +349,10 @@ tidy_tree <- basal_area %>%
   arrange(plot_visit, status) %>%
   replace(is.na(.), 0)
 #write.csv(tidy_tree, file.path(export_dir_nps, 'trees_tidy.csv'), row.names = FALSE)
+
+
+##### Format for metaanlysis ######
+trees_for_meta <- tidy_tree %>%
+  filter(status == 'l') %>%
+  pivot_longer(cols = c(basal_area, density, qmd), names_to = 'variable', values_to = 'value') %>%
+  full_join(plot_visit_data, by = c('plot'))
