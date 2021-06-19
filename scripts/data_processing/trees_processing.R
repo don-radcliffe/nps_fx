@@ -355,4 +355,7 @@ tidy_tree <- basal_area %>%
 trees_for_meta <- tidy_tree %>%
   filter(status == 'l') %>%
   pivot_longer(cols = c(basal_area, density, qmd), names_to = 'variable', values_to = 'value') %>%
-  full_join(plot_visit_data, by = c('plot'))
+  full_join(plot_visit_data, by = c('plot_visit')) %>%
+  ## There are some weird cases of plots with the same number being duplicated
+  unite('plot_area', c(plot, area), sep = '_', remove = FALSE)
+View(trees_for_meta)
