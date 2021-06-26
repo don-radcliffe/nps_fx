@@ -90,7 +90,8 @@ surface_fuels <- surface_fuels_combined %>%
   filter(nacount == 0) %>%
   select(-nacount) %>%
   ## There are still three random lr01 rows hanging out at the bottom for no reason, pretreatment reads. I'm cutting those. 
-  slice(1:640)
+  slice(1:640) %>%
+  slice(c(1:21, 23:640))
 
 ## Export if desired.
-write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
+#write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
