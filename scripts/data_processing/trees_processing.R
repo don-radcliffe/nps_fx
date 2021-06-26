@@ -186,6 +186,13 @@ trees1 <- trees_combined %>%
   mutate(date = format(date, '%Y/%m/%d')) %>%
   ## Create a year column.
   mutate(year = format(as.Date(date, format='%Y'), '%Y'), .after = date) %>%
+  ## Evans and Sterling Valley Areas both got lr01 - lr03, need to fix here.
+  ## Did this manually in my plot visit manual data: June 25, 2021
+  mutate(plot = case_when(
+    plot == 'lr01' & area == 'sterling valley' ~ 'lr91',
+    plot == 'lr02' & area == 'sterling valley' ~ 'lr92',
+    plot == 'lr03' & area == 'sterling valley' ~ 'lr93',
+    TRUE ~ plot)) %>%
   ## Now we need a unique identifier for each plot visit so we can summarize data.
   unite(plot_visit, c('plot', 'year', 'treatment_code', 'years_post'), sep = '_', remove = FALSE) %>%
   ## Convert vector types for columns we'll work with below
@@ -205,6 +212,7 @@ trees1 <- trees_combined %>%
   ## Get rid of spaces that area causing duplicate labels for kettle falls and ricky point areas
   mutate(area = str_replace_all(area, c('ricky north ' = 'ricky north', 'kettle falls ' = 'kettle falls',
                                         'evans ' = 'evans', 'gifford clover ' = 'gifford clover')))
+  
 
 ## Some plot-visits have a lot of NAs in the dbh column, 
 ## mostly concentrated around the immediate post-treatment read but not always.
@@ -350,12 +358,3 @@ tidy_tree <- basal_area %>%
   replace(is.na(.), 0)
 #write.csv(tidy_tree, file.path(export_dir_nps, 'trees_tidy.csv'), row.names = FALSE)
 
-
-##### Format for metaanlysis ######
-trees_for_meta <- tidy_tree %>%
-  filter(status == 'l') %>%
-  pivot_longer(cols = c(basal_area, density, qmd), names_to = 'variable', values_to = 'value') %>%
-  full_join(plot_visit_data, by = c('plot_visit')) %>%
-  ## There are some weird cases of plots with the same number being duplicated
-  unite('plot_area', c(plot, area), sep = '_', remove = FALSE)
-View(trees_for_meta)
