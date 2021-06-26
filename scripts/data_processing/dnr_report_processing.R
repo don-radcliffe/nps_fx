@@ -93,3 +93,24 @@ gg_litterduff <- nps_agg_by_year %>%
   theme_bw() 
 gg_litterduff
 
+nps_for_dnr <- nps_agg_by_year %>%
+  mutate(units = case_when(
+    variable == 'fwd' | variable == 'cwd' | variable == 'litterduff' ~ 'Mg/ha',
+    variable == 'basal_area' ~ 'm2/ha', 
+    variable == 'density' ~ 'trees/ha', 
+    variable == 'qmd' ~ 'cm')) %>%
+  mutate(study = 'Radcliffe3') %>%
+  mutate(forest_type = case_when(
+    region == 'lake roosevelt' ~ 'Ponderosa Pine',
+    region == 'north cascades' ~ 'Mixed Conifer',
+  )) %>%
+  mutate(region = 'Washington') %>%
+  mutate(burn_season = 'mixed') %>%
+  mutate(thin_type = 'commercial') %>%
+  mutate(other = NA) %>%
+  mutate(other2 = NA) %>%
+  select(value, variable, units, years_post, treatment, study, forest_type,
+         region, burn_season, thin_type, other, other2)
+
+## Export if desired
+write.csv(nps_for_dnr, file.path(export_dir_n, 'nps_for_dnr.csv'))
