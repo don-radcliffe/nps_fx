@@ -109,8 +109,9 @@ nps_for_dnr <- nps_agg_by_year %>%
   mutate(thin_type = 'commercial') %>%
   mutate(other = NA) %>%
   mutate(other2 = NA) %>%
+  mutate(variable = round(variable, digits = 2)) %>%
   select(value, variable, units, years_post, treatment, study, forest_type,
          region, burn_season, thin_type, other, other2)
 
 ## Export if desired
-write.csv(nps_for_dnr, file.path(export_dir_n, 'nps_for_dnr.csv'))
+#write.csv(nps_for_dnr, file.path(export_dir_n, 'nps_for_dnr.csv'), row.names = FALSE)
