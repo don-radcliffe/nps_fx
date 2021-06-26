@@ -25,6 +25,13 @@ surface_fuels_raw_noca <- read.csv(file.path(import_dir_sfs, 'surface_fuels_repo
 surface_fuels_raw_laro <- read.csv(file.path(import_dir_sfs, 'surface_fuels_report_raw_laro.csv'), stringsAsFactors = TRUE)
 plot_visit_data <- read.csv(file.path(import_dir_sfs_tidy, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
 
+## To filter out the sterling valley plots, easiest thing to do for time being
+sterling_valley <- data.frame (plot_visit = c('lr01_2011_-1_-1', 'lr01_2013_03_01', 'lr01_2014_03_02', 'lr01_2017_03_05', 
+                     'lr02_2011_-1_-1', 'lr02_2013_03_00', 'lr02_2013_03_01', 'lr02_2014_03_02',
+                     'lr02_2017_03_05', 'lr03_2011_-1_-1', 'lr03_2013_03_00', 'lr03_2013_03_01',
+                     'lr03_2014_03_02', 'lr03_2017_03_05'))
+
+
 ## To get the year for my plot_visit column.
 year <- plot_visit_data %>%
   select(plot, monitoring_status, year)
@@ -73,7 +80,10 @@ surface_fuels <- surface_fuels_combined %>%
   ## Multiplying by ten to convert from kg/m to Mg/ha, which we use for other datasets.
   mutate_at(c('one_hour', 'ten_hour', 'hundred_hour', 'fwd',
               'thousand_sound', 'thousand_rotten', 'one_to_thousand', 
-              'duff', 'litter', 'total'), function(x)(x*10))
+              'duff', 'litter', 'total'), function(x)(x*10)) %>%
+  ## Get rid of plots that could be sterling valley
+  anti_join(sterling_valley, by = 'plot_visit')
+View(surface_fuels)
 
 ## Export if desired.
 #write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
