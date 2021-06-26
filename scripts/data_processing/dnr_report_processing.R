@@ -109,7 +109,7 @@ nps_for_dnr <- nps_agg_by_year %>%
   mutate(thin_type = 'commercial') %>%
   mutate(other = NA) %>%
   mutate(other2 = NA) %>%
-  mutate(variable = round(variable, digits = 2)) %>%
+  mutate(value = round(value, digits = 2)) %>%
   select(value, variable, units, years_post, treatment, study, forest_type,
          region, burn_season, thin_type, other, other2)
 
