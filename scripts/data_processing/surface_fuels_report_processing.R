@@ -25,6 +25,8 @@ surface_fuels_raw_noca <- read.csv(file.path(import_dir_sfs, 'surface_fuels_repo
 surface_fuels_raw_laro <- read.csv(file.path(import_dir_sfs, 'surface_fuels_report_raw_laro.csv'), stringsAsFactors = TRUE)
 plot_visit_data <- read.csv(file.path(import_dir_sfs_tidy, 'plot_visit_data.csv'), stringsAsFactors = TRUE)
 
+## You have an undefensive slice call, check it if you're adding data. 
+
 ## To filter out the sterling valley plots, easiest thing to do for time being
 sterling_valley <- data.frame (plot_visit = c('lr01_2011_-1_-1', 'lr01_2013_03_01', 'lr01_2014_03_02', 'lr01_2017_03_05', 
                      'lr02_2011_-1_-1', 'lr02_2013_03_00', 'lr02_2013_03_01', 'lr02_2014_03_02',
@@ -86,8 +88,9 @@ surface_fuels <- surface_fuels_combined %>%
   ## There are a bunch of NA's in the year column for lr01-03, bet those could be sterling valley
   mutate(nacount = str_count(plot_visit, 'NA')) %>%
   filter(nacount == 0) %>%
-  select(-nacount)
+  select(-nacount) %>%
+  ## There are still three random lr01 rows hanging out at the bottom for no reason, pretreatment reads. I'm cutting those. 
+  slice(1:640)
 
 ## Export if desired.
-#write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
-#View(surface_fuels)
+write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
