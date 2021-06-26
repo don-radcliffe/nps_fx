@@ -82,9 +82,12 @@ surface_fuels <- surface_fuels_combined %>%
               'thousand_sound', 'thousand_rotten', 'one_to_thousand', 
               'duff', 'litter', 'total'), function(x)(x*10)) %>%
   ## Get rid of plots that could be sterling valley
-  anti_join(sterling_valley, by = 'plot_visit')
-View(surface_fuels)
+  anti_join(sterling_valley, by = 'plot_visit') %>%
+  ## There are a bunch of NA's in the year column for lr01-03, bet those could be sterling valley
+  mutate(nacount = str_count(plot_visit, 'NA')) %>%
+  filter(nacount == 0) %>%
+  select(-nacount)
 
 ## Export if desired.
 #write.csv(surface_fuels, file.path(export_dir_sfs, 'surface_fuels_report_tidy.csv'), row.names = FALSE)
-View(surface_fuels)
+#View(surface_fuels)
