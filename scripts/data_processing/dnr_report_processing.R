@@ -80,7 +80,7 @@ nps <- bind_rows(nps_tb, nps_btb) %>%
   #mutate(treatment = str_replace_all(treatment, c('burn_thin_burn' = 'thin_burn'))) %>%
   ## This will be better data for our question if we take burn and thin out, 
   ## leaving whatever pretreatment plots left as control for thinburn. 
-  inner_join(thinburn_plots, by = 'plot') %>%
+  inner_join(thinburn_plots_all, by = 'plot') %>%
   ## We get some weird effects from not all plots going 15 years, fixing that:
   filter(treatment == 'thin_burn' | treatment == 'burn_thin_burn') %>%
   mutate(treatment = str_replace_all(treatment, c('burn_thin_burn' = 'Burn thin burn',
@@ -108,13 +108,15 @@ nps_agg_by_year <- nps %>%
   ## Let's get rid of low sample size years
   filter(years_post == -1 | years_post == 0 | years_post == 1 | years_post == 2 | 
          years_post == 5 | years_post == 10 | years_post == 15) %>%
-  aggregate(value ~ variable + treatment + years_post + forest_type, data = ., FUN = mean)
+  aggregate(value ~ variable + treatment + years_post + forest_type, data = ., FUN = mean) %>%
+  mutate(years_post = case_when(years_post == 0 ~ 0.3, TRUE ~ as.numeric(years_post)))
 
 gg_fwd <- nps_agg_by_year %>%
   filter(variable == 'fwd') %>%
   ggplot(aes(x = years_post, y = value, color = treatment, pch = forest_type)) +
   geom_point(size = 3) +
   geom_line() +
+  geom_abline(intercept = 0, slope = 1000000, lty = 'dotted') +
   ggtitle('Twig dynamics in NPS Fire Effects Monitoring sites, Washington') +
   xlab('Years after treatment') +
   ylab('Megagrams per hectare') +
